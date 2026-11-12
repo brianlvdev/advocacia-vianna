@@ -1,0 +1,19 @@
+.painel { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+.painel h1 { color: var(--cor-principal); margin-bottom: 16px; }
+.painel form { display: grid; gap:14px; }
+.painel label { display: grid; gap:6px; font-weight: bold; }
+.painel input, .painel textarea, .painel select { 
+    padding: 10px; border: 1px solid #ccc; border-radius: 6px; font: inherit; 
+}
+
+.painel textarea { min-height: 120px; }
+.painel fieldset { border: 1px solid #ddd; border-radius: 8px; padding: 16px; 
+    display: grid; gap: 10px;
+}
+
+.linha { display:flex; gap: 8px; flex-wrap: wrap; }
+.linha input { flex: 1; min-width: 140px; }
+.aviso { color: green; }
+.lista-caso { display: grid; gap: 14px; margin-top: 24px; }
+.caso { background: #fff; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.etiqueta { display: inline-block; pad: 2px 10px; border-radius: 12px; background: #eee; font-size: .85rem; }
