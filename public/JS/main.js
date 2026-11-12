@@ -1,2 +1,0 @@
-document.getElementById('link-whats').href =
-  'https://api.whatsapp.com/send?phone=5531993871781&text=Ol%C3%A1%2C+Dra.Ludmila+Vianna';
