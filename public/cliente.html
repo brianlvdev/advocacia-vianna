@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang='pt-BR'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>minha area</title>
+  <link rel='stylesheet' href='css/style.css'>
+  <link rel='stylesheet' href='css/painel.css'>
+</head>
+<body>
+  <header class='topo'>
+    <a href='index.html' class='marca'><img src='img/logo.png' alt='Logo Advocacia Vianna'></a>
+    <nav>
+      <a href='index.html'>Ver site</a>
+      <button id='btn-sair' class='btn'>Sair</button>
+    </nav>
+  </header>
+
+    <main class='painel'>
+            <h1>Minha área</h1>
+    <p id='boas-vindas'></p>
+
+    <a class='btn' id='btn-agendar' href='#'>Agendar conversa</a>
+
+    <h2>Conte o seu caso</h2>
+    <form id='form-caso'>
+      <label>Assunto
+        <select id='assunto'>
+          <option>Direito Penal</option>
+          <option>Direito de Família</option>
+          <option>Direito Civil</option>
+          <option>Direito Penal Econômico</option>
+          <option>Outro</option>
+        </select>
+      </label>
+      <label>Explique o caso de forma resumida
+        <textarea id='resumo' required></textarea>
+      </label>
+      <label>Documentos (PDF, imagem ou texto, até 10 MB cada)
+        <input type='file' id='arquivos' multiple accept='image/*,.pdf,.txt'>
+      </label>
+      <label>
+        Concordo com o tratamento dos meus dados para análise do caso, conforme a Política de Privacidade.
+           <input type='checkbox' id='consentimento' required>
+      </label>
+      <button class='btn' type='submit'>Enviar</button>
+      <p id='aviso' class='aviso'></p>
+    </form>
+
+    <h2>Meus envios</h2>
+    <div id='lista-casos' class='lista-casos'></div>
+      <script type='module' src='js/cliente.js'></script>
+</body>
+</html>

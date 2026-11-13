@@ -1,29 +1,55 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang='pt-BR'>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Painel do Advogado</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/painel.css">
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <title>Painel do Advogado</title>
+  <link rel='stylesheet' href='css/style.css'>
+  <link rel='stylesheet' href='css/painel.css'>
 </head>
-
 <body>
+  <header class='topo'>
+    <a href='index.html' class='marca'><img src='img/logo.png' alt='Logo Advocacia Vianna'></a>
+    <nav>
+      <a href='index.html'>Ver site</a>
+      <button id='btn-sair' class='btn'>Sair</button>
+    </nav>
+  </header>
 
-    <header class="topo">
-        <a href="index.html" class="marca"><img src="img/logo.png" alt="Logo Advocacia Vianna"></a>
-        <nav>
-            <a href="index.html">Ver Site</a>
-            <button id="btn-sair" class="btn">Sair</button>
-        </nav>
-    </header>
+    <main class='painel'>
+    <h1>Painel do Advogado</h1>
+    <p id='boas-vindas'></p>
 
-    <main>
-        <h1>Painel do Advogado</h1>
-        <p id="boas vindas"></p>
-    </main>
+    <form id='form-perfil'>
+      <label>Resumo (Sobre mim)
+        <textarea id='resumo'></textarea>
+      </label>
+      <label>Foto de perfil
+        <input type='file' id='foto' accept='image/*'>
+      </label>
+      <label>Endereço <input id='endereco'></label>
+      <label>WhatsApp (só números, com 55 e DDD) <input id='whatsapp'></label>
+      <label>E-mail <input id='email' type='email'></label>
+      <label>Instagram (usuário) <input id='instagram'></label>
+      <label>Link do perfil no JusBrasil <input id='jusbrasilUrl' type='url'></label>
 
-    <script type="module" src="js/advogado.js"></script>
+      <fieldset>
+        <legend>Áreas de atuação</legend>
+        <div id='lista-areas'></div>
+        <button type='button' id='add-area'>Adicionar área</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Estatísticas</legend>
+        <div id='lista-stats'></div>
+        <button type='button' id='add-stat'>Adicionar estatística</button>
+      </fieldset>
+
+      <button class='btn' type='submit'>Salvar alterações</button>
+      <p id='aviso' class='aviso'></p>
+    </form>
+  </main>
+
+  <script type='module' src='js/advogado.js'></script>
 </body>
 </html>

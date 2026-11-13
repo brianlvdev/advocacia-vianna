@@ -1,65 +1,98 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8">
-        <meta name= "viewport" content="width=device-width, initial-scale=1">
-        <title>Advocacia Vianna</title>
-        <meta name="description" content="Advocacia Vianna: Atendimento jurídico com antencao e clareza.">
-        <link rel="stylesheet" href="css/style.css">
-    </head>
-    <body>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Advocacia Vianna</title>
+    <meta name="description" content="Advocacia Vianna: Atendimento jurídico com antencao e clareza.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="topo">
+        <a href="#inicio" class="marca"><img src="img/logo.png" alt="Logo Advocacia Vianna"></a>
+        <nav>
+            <a href="#sobre">Sobre</a>
+            <a href="#areas">Áreas de atuação</a>
+            <a href="#contato">Contato</a>
+            <a id='link-painel' href='#' hidden>Meu painel</a>
+            <button id="btn-login" class="btn">Entrar com Google</button>
+
+        </nav>
+    </header>
+    <main>
+        <section id="inicio" class="hero">
+            <h1>Advocacia Vianna</h1>
+            <p>Atendimento jurídico com antencao e clareza.</p>
+            <a class="btn" href="#contato">Fale Comigo</a>
+        </section>
+
+        <section id="sobre">
+            <h2>Sobre mim</h2>
+            <div class="sobre-grid">
+                <img id="foto-advogada" src="img/foto-advogada.jpeg" alt="Foto da Advogada">
+                <p id="texto-sobre">" adicione seu texto mae, da pra editar isso pelo painel depois👍 "</p>
+
+            </div>
+        </section>
+
+        <section id="areas">
+            <h2>Áreas de atuação</h2>
+            <div class="cards">
+                <article class="card">
+                    <h3>Direito Penal</h3>
+                    <p>breve descricao </p>
+                </article>
+                <article class="card">
+                    <h3>Direito de Familia</h3>
+                    <p>breve descricao </p>
+                </article>
+                <article class="card">
+                    <h3>Direito Civil</h3>
+                    <p>breve descricao </p>
+                </article>
+                <article class="card">
+                    <h3>Direito Penal Economicos</h3>
+                    <p>breve descricao </p>
+                </article>
+                <article class="card">
+                    <h3>teste</h3>
+                    <p>test </p>
+                </article>
+            </div>
+            <!-- <div id='lista-areas' class='cards'></div> -->
+        </section>
         
-        <header class="topo">
-            <a href="#inicio" class="marca"><img src="img/logo.png" alt="Logo Advocacia Vianna"></a>
-            <nav>
-                <a href="#sobre">Sobre</a>
-                <a href="#Areas">Áreas de atuação</a>
-                <a href="#contato">Contato</a>
-                <a id="link-painel" href="#" hidden>Meu Painel</a>
-                <button id="btn-login" class="btn">Entrar com Google</button>
-            </nav>
-        </header>
-        <main>
-            <section id="inicio" class="hero">
-                <h1>Advocacia Vianna</h1>
-                <p>Atendimento jurídico com antencao e clareza.</p>
-                <a class="btn" href="#contato" >Fale Comigo</a>
-            </section>
+        <section id='numeros'>
+            <h2>Atuação em números</h2>
+            <div id='lista-stats' class='cards'></div>
+            <p><a id='link-jusbrasil' href='#' target='_blank' rel='noopener' hidden>Ver perfil completo no
+                    JusBrasil</a></p>
 
-            <section id="Sobre">
-                <h2>Sobre mim</h2>
-                <div class="sobre-grid">
-                    <img id="foto-advogada"src="img/foto-advogada.jpeg" alt="Foto da Advogada">
-                    <p id="texto-sobre">" adicione seu texto mae, da pra editar isso pelo painel depois👍 "</p>
-                </div>
-            </section>
-            
-            <section id="areas">
-                <h2>Áreas de atuação</h2>
-                <div class="cards">
-                    <article class="card"><h3>Direito Penal</h3><p>breve descricao </p></article>
-                    <article class="card"><h3>Direito de Familia</h3><p>breve descricao </p></article>
-                    <article class="card"><h3>Direito Civil</h3><p>breve descricao </p></article>
-                    <article class="card"><h3>Direito Penal Economicos</h3><p>breve descricao </p></article>
-                    <article class="card"><h3>teste</h3><p>test </p></article>
-                </div>
-            </section>
+        </section>
+        <section id="contato">
+            <h2>Contato</h2>
+            <ul class="contatos">
+                <li id='item-endereco'></li>
+                <li><a id="link-whats" class="btn" href="#" target="_blank" rel="noopener">Faca contato comigo pelo
+                        WhatsApp</a></li>
+                <li><a id='link-email' class="btn" href="mailto:LudmilaVianna@yahoo.com.br">Email</a></li>
+                <li><a id='link-instagram' class="btn" href="https://www.instagram.com/dra.ludmila.vianna/"
+                        target="_blank" rel="noopener">Instagram</a></li>
+            </ul>
+        </section>
 
-            <section id="contato">
-                <h2>Contato</h2>
-                <ul class="contatos">
-                    <li><a id="link-whats" class="btn" href="#" target="_blank" rel="noopener">Faca contato comigo pelo WhatsApp</a></li>
-                    <li><a class= "btn" href="mailto:LudmilaVianna@yahoo.com.br">Email</a></li>
-                    <li><a class= "btn" href="https://www.instagram.com/dra.ludmila.vianna/" target="_blank" rel="noopener">Instagram</a></li>
-                </ul>
-            </section>
-        </main>
-        <footer class="rodape">
-            <p>© Advocacia Vianna. Todos os direitos reservados.</p>
-        </footer>
+    </main>
+    <footer class="rodape">
+        <p>© Advocacia Vianna. Todos os direitos reservados.</p>
+    </footer>
 
-        <script src="js/main.js"></script>
-        <script type="module" src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type='module' src='js/perfil-publico.js'></script>
 
-    </body>
+</body>
+
 </html>

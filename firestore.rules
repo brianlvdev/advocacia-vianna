@@ -1,29 +1,38 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function papel() {
-      return
-      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     function logado() { return request.auth != null; }
-    function ehAdmin(){ return logado() && papel() == 'admin'; }
-    function ehEstagiario(){ return logado() && papel() == 'estagiario' }
+    function ehAdmin() { return logado() && papel() == 'admin'; }
+    function ehEstagiario() { return logado() && papel() == 'estagiario'; }
 
     match /users/{uid} {
       allow read: if logado() && (request.auth.uid == uid || ehAdmin());
-      allow create: if logado() && request.auth.uid == uid && request.resource.data.role == 'cliente';
+      allow create: if logado()
+                    && request.auth.uid == uid
+                    && request.resource.data.role == 'cliente';
       allow update: if ehAdmin();
     }
 
-    match /site/{documento}{
+    // Conteúdo público do site (perfil, áreas, estatísticas)
+    match /site/{documento} {
       allow read: if true;
       allow write: if ehAdmin();
     }
+
     match /casos/{casoId} {
-      allow create: if logado() && request.resource.data.clienteUid == request.auth.uid && request.resource.data.status == 'novo' && request.resource.data.liberadoParaEstagiario == false;
-      allow read: if logado() && (resource.data.clienteUid == request.auth.uid || ehAdmin() || (ehEstagiario() && resource.data.liberadoParaEstagiario == true));
+      allow create: if logado()
+                    && request.resource.data.clienteUid == request.auth.uid
+                    && request.resource.data.status == 'novo'
+                    && request.resource.data.liberadoParaEstagiario == false;
+      allow read: if logado() && (
+                    resource.data.clienteUid == request.auth.uid
+                    || ehAdmin()
+                    || (ehEstagiario() && resource.data.liberadoParaEstagiario == true)
+                  );
       allow update: if ehAdmin();
     }
   }

@@ -48,8 +48,8 @@ onAuthStateChanged(auth, async (usuario) => {
     }
 
     // link do painel baseado na role
-    const dados = (snap.exists() ? snap : await getDoc(ref)).data();
-    const paginas = { admin: "advogado.html", estagiario: "estagiario.html", cliente: "cliente.html" };
-    link.href = paginas[dados.role] || "cliente.html";
-    link.hidden = false;
+  const dados = (await getDoc(ref)).data();
+  const paginas = { admin: 'advogado.html', estagiario: 'estagiario.html', cliente: 'cliente.html' };
+  link.href = paginas[dados.role];
+  link.hidden = false;
 });
