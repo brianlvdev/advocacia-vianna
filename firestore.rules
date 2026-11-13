@@ -35,5 +35,23 @@ service cloud.firestore {
                   );
       allow update: if ehAdmin();
     }
+        match /config/{documento} {
+      allow read: if logado();
+      allow write: if ehAdmin();
+    }
+
+    match /ocupados/{slot} {
+      allow read: if logado();
+      allow create: if logado() && request.resource.data.keys().hasOnly(['inicio']);
+      allow update, delete: if ehAdmin();
+    }
+
+    match /agendamentos/{id} {
+      allow create: if logado()
+                    && request.resource.data.clienteUid == request.auth.uid
+                    && request.resource.data.status == 'pendente';
+      allow read: if logado() && (resource.data.clienteUid == request.auth.uid || ehAdmin());
+      allow update, delete: if ehAdmin();
+    }
   }
 }

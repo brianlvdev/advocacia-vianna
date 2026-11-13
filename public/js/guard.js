@@ -6,14 +6,14 @@ export function exigirPapel(papeisPermitidos) {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (usuario) => {
       if (!usuario) {
-        window.location.href = 'index.html';
+        //window.location.href = 'index.html';
         return;
       }
       const snap = await getDoc(doc(db, 'users', usuario.uid));
       const papel = snap.exists() ? snap.data().role : null;
 
       if (!papeisPermitidos.includes(papel)) {
-        window.location.href = 'index.html';
+        //window.location.href = 'index.html';
         return;
       }
       resolve({ usuario, papel });

@@ -5,6 +5,7 @@ import {
   collection, doc, setDoc, getDocs, query, where, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const { usuario } = await exigirPapel(['cliente']);
 
@@ -44,7 +45,13 @@ document.getElementById('form-caso').addEventListener('submit', async (evento) =
       await uploadBytes(ref(storage, caminho), a);
       enviados.push({ nome: a.name, caminho, tipo: a.type, tamanho: a.size });
     }
-
+    const perfil = await getDoc(doc(db, 'site', 'perfil'));
+    if (perfil.exists() && perfil.data().agendaUrl) {
+      const botao = document.getElementById('btn-agendar');
+      botao.href = perfil.data().agendaUrl;
+      botao.target = '_blank';
+      botao.rel = 'noopener';
+    }
     await setDoc(casoRef, {
       clienteUid: usuario.uid,
       clienteNome: usuario.displayName,
@@ -65,7 +72,7 @@ document.getElementById('form-caso').addEventListener('submit', async (evento) =
     aviso.textContent = 'Erro ao enviar. Tente novamente.';
   }
 });
-
+query(collection(db, 'agendamentos'), where('clienteUid', '==', usuario.uid))
 async function carregarCasos() {
   const lista = document.getElementById('lista-casos');
   lista.replaceChildren();

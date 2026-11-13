@@ -1,9 +1,43 @@
 import { exigirPapel } from './guard.js';
 import { auth, db, storage } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { doc, collection, getDocs, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
+const agendamentos = await getDocs(collection(db, 'agendamentos'));
+
+const cores = { confirmado: '#2e7d32', pendente: '#b8975a', cancelado: '#9e9e9e' };
+const eventos = agendamentos.docs.map((d) => {
+  const a = d.data();
+  return { id: d.id, title: a.clienteNome, start: a.inicio, end: a.fim, color: cores[a.status] };
+});
+
+const calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
+  locale: 'pt-br',
+  initialView: 'dayGridMonth',
+  headerToolbar: {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+  },
+  events: eventos,
+  eventClick: async (info) => {
+    const acao = prompt('Digite 1 para CONFIRMAR ou 2 para CANCELAR esta reunião.');
+    const ref = doc(db, 'agendamentos', info.event.id);
+
+    if (acao === '1') {
+      const link = prompt('Cole o link do Google Meet (pode deixar em branco):') || '';
+      await updateDoc(ref, { status: 'confirmado', meetUrl: link });
+    } else if (acao === '2') {
+      await updateDoc(ref, { status: 'cancelado' });
+    } else {
+      return;
+    }
+    window.location.reload();
+  }
+});
+
+calendario.render();
 const { usuario } = await exigirPapel(['admin']);
 
 document.getElementById('boas-vindas').textContent = 'Olá, ' + usuario.displayName;
@@ -11,9 +45,30 @@ document.getElementById('btn-sair').addEventListener('click', async () => {
   await signOut(auth);
   window.location.href = 'index.html';
 });
+const dispRef = doc(db, 'config', 'disponibilidade');
+const dispSnap = await getDoc(dispRef);
 
+if (dispSnap.exists()) {
+  const d = dispSnap.data();
+  document.querySelectorAll('input[name=dia]').forEach((c) => { c.checked = d.diasSemana.includes(Number(c.value)); });
+  document.getElementById('disp-inicio').value = d.inicio;
+  document.getElementById('disp-fim').value = d.fim;
+  document.getElementById('disp-duracao').value = d.duracaoMin;
+}
+
+document.getElementById('form-disp').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const dias = [...document.querySelectorAll('input[name=dia]:checked')].map((c) => Number(c.value));
+  await setDoc(dispRef, {
+    diasSemana: dias,
+    inicio: document.getElementById('disp-inicio').value,
+    fim: document.getElementById('disp-fim').value,
+    duracaoMin: Number(document.getElementById('disp-duracao').value)
+  });
+  alert('Disponibilidade salva!');
+});
 const perfilRef = doc(db, 'site', 'perfil');
-const CAMPOS = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'jusbrasilUrl'];
+const CAMPOS = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'jusbrasilUrl', 'agendaUrl'];
 const CAMPOS_AREA = [{ chave: 'titulo', rotulo: 'Título' }, { chave: 'descricao', rotulo: 'Descrição' }];
 const CAMPOS_STAT = [{ chave: 'rotulo', rotulo: 'Rótulo (ex: Casos)' }, { chave: 'valor', rotulo: 'Valor (ex: 120)' }];
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang='pt-BR'>
+
 <head>
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -7,7 +8,9 @@
   <link rel='stylesheet' href='css/style.css'>
   <link rel='stylesheet' href='css/painel.css'>
 </head>
+
 <body>
+
   <header class='topo'>
     <a href='index.html' class='marca'><img src='img/logo.png' alt='Logo Advocacia Vianna'></a>
     <nav>
@@ -16,9 +19,29 @@
     </nav>
   </header>
 
-    <main class='painel'>
+  <main class='painel'>
     <h1>Painel do Advogado</h1>
     <p id='boas-vindas'></p>
+    <h2>Agenda</h2>
+    <div id='calendario'></div>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js'></script>
+    <h2>Disponibilidade para reuniões</h2>
+
+    <form id='form-disp'>
+      <fieldset>
+        <legend>Dias da semana</legend>
+        <label><input type='checkbox' name='dia' value='1'> Segunda</label>
+        <label><input type='checkbox' name='dia' value='2'> Terça</label>
+        <label><input type='checkbox' name='dia' value='3'> Quarta</label>
+        <label><input type='checkbox' name='dia' value='4'> Quinta</label>
+        <label><input type='checkbox' name='dia' value='5'> Sexta</label>
+      </fieldset>
+      <label>Início <input type='time' id='disp-inicio' value='09:00'></label>
+      <label>Fim <input type='time' id='disp-fim' value='17:00'></label>
+      <label>Duração (minutos) <input type='number' id='disp-duracao' value='30' min='15' step='15'></label>
+      <button class='btn' type='submit'>Salvar disponibilidade</button>
+    </form>
 
     <form id='form-perfil'>
       <label>Resumo (Sobre mim)
@@ -32,6 +55,7 @@
       <label>E-mail <input id='email' type='email'></label>
       <label>Instagram (usuário) <input id='instagram'></label>
       <label>Link do perfil no JusBrasil <input id='jusbrasilUrl' type='url'></label>
+      <label>Link da agenda de compromissos (Google) <input id='agendaUrl' type='url'></label>
 
       <fieldset>
         <legend>Áreas de atuação</legend>
@@ -45,6 +69,15 @@
         <button type='button' id='add-stat'>Adicionar estatística</button>
       </fieldset>
 
+
+
+      <!--lembrar de colcar esse trem-->
+      <iframe src='COLE_O_ENDERECO_DO_GOOGLE_AGENDA' style='border:0; width:100%; height:600px;'></iframe>
+
+
+
+
+
       <button class='btn' type='submit'>Salvar alterações</button>
       <p id='aviso' class='aviso'></p>
     </form>
@@ -52,4 +85,5 @@
 
   <script type='module' src='js/advogado.js'></script>
 </body>
+
 </html>
