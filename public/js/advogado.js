@@ -86,7 +86,7 @@ document.getElementById('form-disp').addEventListener('submit', async e => {
 });
 
 const perfilRef = doc(db, 'site', 'perfil');
-const campos = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'jusbrasilUrl', 'agendaUrl'];
+const campos = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'linkedinUrl', 'jusbrasilUrl', 'agendaUrl'];
 function linha(lista, chaves, valores = {}) {
   const wrapper = document.createElement('div'); wrapper.className = 'linha';
   for (const [key, rotulo] of chaves) {

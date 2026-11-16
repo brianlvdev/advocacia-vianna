@@ -24,7 +24,15 @@ try {
         }
       } catch (erro) { console.warn('Foto inválida.'); }
     }
-    if (d.endereco) document.getElementById('item-endereco').textContent = d.endereco;
+    if (typeof d.endereco === 'string' && d.endereco.trim()) {
+      const endereco = d.endereco.trim();
+      document.getElementById('item-endereco').textContent = endereco;
+      document.getElementById('endereco-mapa').textContent = endereco + ', Brasil';
+      document.getElementById('mapa-escritorio').src =
+        'https://www.google.com/maps?q=' + encodeURIComponent(endereco) + '&output=embed';
+      document.getElementById('link-como-chegar').href =
+        'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(endereco);
+    }
     if (typeof d.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) {
       const a = document.getElementById('link-email');
       a.href = 'mailto:' + d.email;
@@ -37,6 +45,7 @@ try {
     }
     if (typeof d.instagram === 'string' && /^[a-zA-Z0-9._]{1,30}$/.test(d.instagram))
       externo('link-instagram', 'https://www.instagram.com/' + d.instagram + '/');
+    if (d.linkedinUrl) externo('link-linkedin', d.linkedinUrl);
     if (d.jusbrasilUrl) externo('link-jusbrasil', d.jusbrasilUrl);
     if (Array.isArray(d.areas) && d.areas.length) {
       const lista = document.getElementById('lista-areas');

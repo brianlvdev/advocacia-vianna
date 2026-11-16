@@ -13,7 +13,7 @@
     <a class="marca" href="#inicio"><img src="img/logo.png" alt="Advocacia Vianna"></a>
     <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="menu-principal" aria-expanded="false">☰</button>
     <nav id="menu-principal" aria-label="Navegação principal">
-      <a href="#sobre">O escritório</a><a href="#areas">Atuação</a><a href="#contato">Contato</a>
+      <a href="#sobre">O escritório</a><a href="#areas">Atuação</a><a href="#contato">Contato</a><a href="#localizacao">Localização</a>
       <a id="link-painel" href="cliente.html" hidden>Meu painel</a>
       <button id="btn-login" type="button" class="btn btn-nav">Entrar com Google</button>
     </nav>
@@ -57,14 +57,39 @@
     </section>
     <section id="numeros" class="informacoes-secao" hidden><p class="sobretitulo">INFORMAÇÕES INSTITUCIONAIS</p><h2>O escritório</h2><div id="lista-stats" class="cards"></div><p><a id="link-jusbrasil" href="#" target="_blank" rel="noopener noreferrer" hidden>Perfil profissional no Jusbrasil ↗</a></p></section>
     <section id="contato" class="contato-secao">
-      <div class="contato-grid"><div>
-        <p class="sobretitulo">CONTATO</p><h2>Estamos à disposição para ouvir você.</h2>
-        <p>Entre em contato para informações sobre atendimento. Não encaminhe documentos sensíveis por canais públicos.</p><p id="item-endereco"></p>
-      </div><div class="contato-acoes">
-        <a id="link-whats" class="btn btn-claro" target="_blank" rel="noopener noreferrer" href="#" hidden>Conversar pelo WhatsApp ↗</a>
-        <a id="link-email" class="btn btn-contorno" href="#" hidden>Enviar e-mail ↗</a>
-        <a id="link-instagram" class="link-discreto" href="#" target="_blank" rel="noopener noreferrer" hidden>Instagram ↗</a>
-      </div></div>
+      <div class="contato-grid">
+        <div>
+          <p class="sobretitulo">CONTATO</p>
+          <h2>Estamos à disposição para ouvir você.</h2>
+          <p>Entre em contato para informações sobre atendimento. Evite encaminhar documentos ou dados sensíveis pelas redes sociais.</p>
+          <p id="item-endereco" class="contato-endereco">Alameda Montevideo, 293 - Sl 206 - Nossa Sra. das Dores, Santa Maria - RS, 97050-030</p>
+          <a id="link-email" class="link-discreto" href="#" hidden>Enviar e-mail ao escritório ↗</a>
+        </div>
+        <div class="contato-acoes" aria-label="Canais de contato">
+          <p class="redes-titulo">CANAIS DE CONTATO</p>
+          <a id="link-whats" class="rede-botao rede-destaque" href="https://api.whatsapp.com/send?phone=5531993871781&amp;text=Ol%C3%A1%2C+Dra.Ludmila+Vianna" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" class="rede-icone" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 11.7a8.6 8.6 0 0 1-12.8 7.5L3 20.5l1.3-4.7a8.6 8.6 0 1 1 16.3-4.1Z"/><path d="M8.4 7.9c.3-.3.6-.3.8.1l1.1 1.7c.2.3.1.5-.1.8l-.6.7c.6 1.1 1.5 2 2.6 2.6l.7-.6c.3-.2.5-.3.8-.1l1.7 1.1c.4.2.4.5.1.8-.6.8-1.4 1.1-2.2.9-2.7-.6-5.1-3-5.7-5.7-.2-.8.1-1.6.8-2.3Z"/></svg><span class="rede-texto"><strong>WhatsApp</strong><small>Conversar com o escritório</small></span><span class="rede-seta" aria-hidden="true">↗</span></a>
+          <a id="link-instagram" class="rede-botao " href="https://www.instagram.com/dra.ludmila.vianna/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" class="rede-icone" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.6" y="2.6" width="18.8" height="18.8" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.7" cy="6.4" r=".9" fill="currentColor" stroke="none"/></svg><span class="rede-texto"><strong>Instagram</strong><small>Perfil profissional</small></span><span class="rede-seta" aria-hidden="true">↗</span></a>
+          <a id="link-linkedin" class="rede-botao " href="https://www.linkedin.com/in/ludmila-vianna-09a49a48/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" class="rede-icone" fill="currentColor" aria-hidden="true"><path d="M5.2 2.5a2.15 2.15 0 1 0 0 4.3 2.15 2.15 0 0 0 0-4.3ZM3.4 8.6H7v12.9H3.4V8.6Zm6.1 0H13V10c.55-.98 1.65-1.66 3.32-1.66 3.55 0 4.28 2.24 4.28 5.13v8.03h-3.6v-7.3c0-1.64-.04-2.73-1.85-2.73-1.63 0-2.05 1.19-2.05 2.65v7.38H9.5V8.6Z"/></svg><span class="rede-texto"><strong>LinkedIn</strong><small>Trajetória profissional</small></span><span class="rede-seta" aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <div class="localizacao-bloco" id="localizacao">
+        <p class="sobretitulo">VISITE O ESCRITÓRIO</p>
+        <h2>Onde nos encontrar</h2>
+        <p class="localizacao-intro">Atendimento presencial mediante agendamento.</p>
+        <div class="localizacao-grid">
+          <div class="localizacao-detalhes">
+            <div class="localizacao-marcador"><svg viewBox="0 0 24 24" class="rede-icone" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+            <h3>Advocacia Vianna</h3>
+            <address id="endereco-mapa">Alameda Montevideo, 293 - Sl 206 - Nossa Sra. das Dores, Santa Maria - RS, 97050-030<br>Brasil</address>
+            <p>Alameda Montevideo, nº 293, sala 206, bairro Nossa Senhora das Dores.</p>
+            <a id="link-como-chegar" class="btn btn-claro" href="https://www.google.com/maps/dir/?api=1&amp;destination=Alameda%20Montevideo%2C%20293%2C%20Nossa%20Senhora%20das%20Dores%2C%20Santa%20Maria%2C%20RS%2C%20Brasil" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" class="rede-icone" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 10c0 5.1-8 11-8 11S4 15.1 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.6"/></svg><span>Como chegar</span><span aria-hidden="true">↗</span></a>
+            <small>Mapa fornecido pelo Google Maps.</small>
+          </div>
+          <div class="localizacao-mapa">
+            <iframe id="mapa-escritorio" title="Mapa do escritório Advocacia Vianna em Santa Maria, RS" src="https://www.google.com/maps?q=Alameda%20Montevideo%2C%20293%2C%20Nossa%20Senhora%20das%20Dores%2C%20Santa%20Maria%2C%20RS%2C%20Brasil&amp;output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
   <footer class="rodape"><div><strong>Advocacia Vianna</strong><p>Atendimento jurídico responsável.</p></div><div><a href="privacidade.html">Privacidade</a></div><p>© <span id="ano"></span> Advocacia Vianna. Conteúdo informativo, sem promessa de resultados.</p></footer>
