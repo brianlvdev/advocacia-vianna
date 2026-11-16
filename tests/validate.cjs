@@ -34,6 +34,21 @@ try {
         pagina + ': elemento #' + id + ' ausente');
     }
   }
+  const guard = readFileSync(join(raiz, 'public/js/guard.js'), 'utf8');
+  assert(/export\\s+function\\s+exigirPapel\\s*\\(/.test(guard),
+    'guard.js: funcao exigirPapel precisa ser exportada');
+
+  const admin = readFileSync(join(raiz, 'public/js/advogado.js'), 'utf8');
+  const adminHTML = readFileSync(join(raiz, 'public/advogado.html'), 'utf8');
+  assert(admin.includes('limpar-conteudo-teste') && adminHTML.includes('id="limpar-conteudo-teste"'),
+    'o botao de limpeza precisa estar integrado ao painel');
+  assert(admin.includes('add-area') && admin.includes('add-stat'),
+    'controles de inclusao precisam ter eventos de click');
+
+  const perfil = readFileSync(join(raiz, 'public/js/perfil-publico.js'), 'utf8');
+  assert(perfil.includes('criarCirculo') && perfil.includes('enderecoSeguro'),
+    'perfil publico precisa suportar indicadores e endereco institucional');
+
   const firebase = JSON.parse(readFileSync(join(raiz, 'firebase.json'), 'utf8'));
   assert(firebase.firestore.rules && firebase.storage.rules && firebase.functions);
   const indices = JSON.parse(readFileSync(join(raiz, 'firestore.indexes.json'), 'utf8'));
