@@ -1,0 +1,45 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function logado() { return request.auth != null; }
+    function papel() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role;
+    }
+    function admin() { return logado() && papel() == 'admin'; }
+    function caso(casoId) {
+      return firestore.get(/databases/(default)/documents/casos/$(casoId)).data;
+    }
+    function existeCaso(casoId) {
+      return firestore.exists(/databases/(default)/documents/casos/$(casoId));
+    }
+
+    match /site/foto-perfil {
+      allow read: if true;
+      allow write: if admin()
+        && request.resource.size <= 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    match /casos/{uid}/{casoId}/{arquivoId} {
+      allow read: if logado()
+        && existeCaso(casoId)
+        && caso(casoId).clienteUid == uid
+        && (
+          request.auth.uid == uid
+          || admin()
+          || (papel() == 'estagiario'
+              && caso(casoId).liberadoParaEstagiario == true
+              && caso(casoId).estagiarioUid == request.auth.uid)
+        );
+      allow create: if logado()
+        && request.auth.uid == uid
+        && existeCaso(casoId)
+        && caso(casoId).clienteUid == uid
+        && caso(casoId).status == 'uploading'
+        && arquivoId.matches('[A-Za-z0-9-]{20,64}')
+        && request.resource.size <= 10 * 1024 * 1024
+        && request.resource.contentType.matches('(application/pdf|text/plain|image/(jpeg|png|webp))');
+      allow update, delete: if false;
+    }
+  }
+}

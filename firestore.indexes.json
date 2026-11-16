@@ -1,4 +1,19 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "casos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "liberadoParaEstagiario",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "estagiarioUid",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

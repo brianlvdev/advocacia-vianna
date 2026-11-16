@@ -1,13 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Painel da equipe | Advocacia Vianna</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/painel.css">
 </head>
 <body>
-    <div id='calendario'></div>
-    <h2>Tarefas</h2><div id='lista-tarefas'></div>
-    <h2>Casos liberados</h2><div id='lista-casos' class='lista-casos'></div>
+  <header class="topo">
+    <a href="index.html" class="marca"><img src="img/logo.png" alt="Advocacia Vianna"></a>
+    <nav><a href="index.html">Ver site</a><button id="btn-sair" class="btn">Sair</button></nav>
+  </header>
+  <main class="painel">
+    <p class="sobretitulo">Área restrita</p>
+    <h1>Painel da equipe</h1>
+    <p id="boas-vindas"></p>
+    <p id="aviso" class="aviso" role="status"></p>
+    <section class="painel-secao"><h2>Agenda de tarefas</h2><div id="calendario"></div></section>
+    <section class="painel-secao"><h2>Tarefas</h2><div id="lista-tarefas" class="lista-casos"></div></section>
+    <section class="painel-secao"><h2>Casos atribuídos</h2><div id="lista-casos" class="lista-casos"></div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+  <script type="module" src="js/estagiario.js"></script>
 </body>
 </html>

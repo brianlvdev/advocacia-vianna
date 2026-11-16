@@ -1,250 +1,262 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db, storage, functions } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { doc, collection, getDocs, updateDoc, getDoc, setDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {
+  doc, collection, getDocs, updateDoc, getDoc, setDoc, addDoc, deleteDoc,
+  query, where, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
 
 const { usuario } = await exigirPapel(['admin']);
-const agendamentos = await getDocs(collection(db, 'agendamentos'));
-
-const cores = { confirmado: '#2e7d32', pendente: '#b8975a', cancelado: '#9e9e9e' };
-const eventos = agendamentos.docs.map((d) => {
-  const a = d.data();
-  return { id: d.id, title: a.clienteNome, start: a.inicio, end: a.fim, color: cores[a.status] };
-});
-
-const calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
-  locale: 'pt-br',
-  initialView: 'dayGridMonth',
-  headerToolbar: {
-    left: 'prev,next today',
-    center: 'title',
-    right: 'dayGridMonth,timeGridWeek,timeGridDay'
-  },
-  events: eventos,
-  eventClick: async (info) => {
-    const acao = prompt('Digite 1 para CONFIRMAR ou 2 para CANCELAR esta reunião.');
-    const ref = doc(db, 'agendamentos', info.event.id);
-
-    if (acao === '1') {
-      const link = prompt('Cole o link do Google Meet (pode deixar em branco):') || '';
-      await updateDoc(ref, { status: 'confirmado', meetUrl: link });
-    } else if (acao === '2') {
-      await updateDoc(ref, { status: 'cancelado' });
-    } else {
-      return;
-    }
-    window.location.reload();
-  }
-});
-
-calendario.render();
-
-
-document.getElementById('boas-vindas').textContent = 'Olá, ' + usuario.displayName;
+const status = document.getElementById('aviso');
+const marcar = httpsCallable(functions, 'atualizarAgendamento');
+document.getElementById('boas-vindas').textContent = 'Olá, ' + (usuario.displayName || 'bem-vinda');
 document.getElementById('btn-sair').addEventListener('click', async () => {
-  await signOut(auth);
-  window.location.href = 'index.html';
+  await signOut(auth); location.replace('index.html');
 });
-const dispRef = doc(db, 'config', 'disponibilidade');
-const dispSnap = await getDoc(dispRef);
-
-if (dispSnap.exists()) {
-  const d = dispSnap.data();
-  document.querySelectorAll('input[name=dia]').forEach((c) => { c.checked = d.diasSemana.includes(Number(c.value)); });
-  document.getElementById('disp-inicio').value = d.inicio;
-  document.getElementById('disp-fim').value = d.fim;
-  document.getElementById('disp-duracao').value = d.duracaoMin;
+function mensagem(texto) { status.textContent = texto; }
+function falha(descricao, erro) {
+  console.error(descricao, erro);
+  mensagem('Não foi possível ' + descricao + '. Verifique sua conexão e as permissões.');
 }
-
-document.getElementById('form-disp').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const dias = [...document.querySelectorAll('input[name=dia]:checked')].map((c) => Number(c.value));
-  await setDoc(dispRef, {
-    diasSemana: dias,
-    inicio: document.getElementById('disp-inicio').value,
-    fim: document.getElementById('disp-fim').value,
-    duracaoMin: Number(document.getElementById('disp-duracao').value)
-  });
-  alert('Disponibilidade salva!');
-});
-const perfilRef = doc(db, 'site', 'perfil');
-const CAMPOS = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'jusbrasilUrl', 'agendaUrl'];
-const CAMPOS_AREA = [{ chave: 'titulo', rotulo: 'Título' }, { chave: 'descricao', rotulo: 'Descrição' }];
-const CAMPOS_STAT = [{ chave: 'rotulo', rotulo: 'Rótulo (ex: Casos)' }, { chave: 'valor', rotulo: 'Valor (ex: 120)' }];
-
-const listaAreas = document.getElementById('lista-areas');
-const listaStats = document.getElementById('lista-stats');
-
-function criarLinha(lista, campos, valores) {
-  const linha = document.createElement('div');
-  linha.className = 'linha';
-
-  campos.forEach((c) => {
-    const input = document.createElement('input');
-    input.placeholder = c.rotulo;
-    input.dataset.campo = c.chave;
-    input.value = valores[c.chave] || '';
-    linha.appendChild(input);
-  });
-
-  const remover = document.createElement('button');
-  remover.type = 'button';
-  remover.textContent = 'Remover';
-  remover.addEventListener('click', () => linha.remove());
-  linha.appendChild(remover);
-
-  lista.appendChild(linha);
-}
-
-function lerLinhas(lista) {
-  return [...lista.querySelectorAll('.linha')]
-    .map((linha) => {
-      const obj = {};
-      linha.querySelectorAll('input').forEach((i) => { obj[i.dataset.campo] = i.value.trim(); });
-      return obj;
-    })
-    .filter((obj) => Object.values(obj).some((v) => v));
-}
-
-// Carregar dados existentes
-const snap = await getDoc(perfilRef);
-const dados = snap.exists() ? snap.data() : {};
-CAMPOS.forEach((c) => { document.getElementById(c).value = dados[c] || ''; });
-(dados.areas || []).forEach((a) => criarLinha(listaAreas, CAMPOS_AREA, a));
-(dados.estatisticas || []).forEach((e) => criarLinha(listaStats, CAMPOS_STAT, e));
-
-document.getElementById('add-area').addEventListener('click', () => criarLinha(listaAreas, CAMPOS_AREA, {}));
-document.getElementById('add-stat').addEventListener('click', () => criarLinha(listaStats, CAMPOS_STAT, {}));
-
-// Salvar
-document.getElementById('form-perfil').addEventListener('submit', async (evento) => {
-  evento.preventDefault();
-  const aviso = document.getElementById('aviso');
-  aviso.textContent = 'Salvando...';
-
-  try {
-    const novo = {};
-    CAMPOS.forEach((c) => { novo[c] = document.getElementById(c).value.trim(); });
-    novo.areas = lerLinhas(listaAreas);
-    novo.estatisticas = lerLinhas(listaStats);
-    novo.atualizadoEm = new Date().toISOString();
-
-    const arquivo = document.getElementById('foto').files[0];
-    if (arquivo) {
-      const fotoRef = ref(storage, 'site/foto-perfil');
-      await uploadBytes(fotoRef, arquivo);
-      novo.fotoUrl = await getDownloadURL(fotoRef);
-    }
-
-    await setDoc(perfilRef, novo, { merge: true });
-    aviso.textContent = 'Salvo com sucesso!';
-  } catch (erro) {
-    console.error(erro);
-    aviso.textContent = 'Erro ao salvar. Tente novamente.';
-  }
-});
-const listaCasos = document.getElementById('lista-casos');
-
-function botao(texto, acao) {
+function botao(texto, fn) {
   const b = document.createElement('button');
-  b.type = 'button';
-  b.textContent = texto;
+  b.type = 'button'; b.className = 'btn btn-secundario'; b.textContent = texto;
   b.addEventListener('click', async () => {
-    await acao();
-    carregarCasos();
+    b.disabled = true;
+    try { await fn(); } catch (e) { falha('executar a operação', e); }
+    finally { b.disabled = false; }
   });
   return b;
 }
-
-async function carregarCasos() {
-  listaCasos.replaceChildren();
-
-  const usuarios = await getDocs(query(collection(db, 'users'), where('role', '==', 'estagiario')));
-  const estagiarios = usuarios.docs.map((d) => ({ uid: d.id, ...d.data() }));
-
-  const todos = await getDocs(collection(db, 'casos'));
-  const casos = todos.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
-
-  for (const c of casos) {
-    const card = document.createElement('article');
-    card.className = 'caso';
-
-    const titulo = document.createElement('h3');
-    titulo.textContent = c.clienteNome + ' - ' + c.assunto;
-    const etiqueta = document.createElement('span');
-    etiqueta.className = 'etiqueta';
-    etiqueta.textContent = c.status;
-    const texto = document.createElement('p');
-    texto.textContent = c.resumo;
-    card.append(titulo, etiqueta, texto);
-
-    for (const arq of c.arquivos || []) {
-      const link = document.createElement('a');
-      link.href = await getDownloadURL(ref(storage, arq.caminho));
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = arq.nome;
-      card.append(document.createElement('br'), link);
+async function carregarAgenda() {
+  const registros = await getDocs(collection(db, 'agendamentos'));
+  const elem = document.getElementById('calendario');
+  if (!window.FullCalendar) { elem.textContent = 'Calendário indisponível.'; return; }
+  new FullCalendar.Calendar(elem, {
+    locale: 'pt-br', initialView: 'dayGridMonth',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+    events: registros.docs.map(d => {
+      const a = d.data();
+      return { id: d.id, title: a.clienteNome || 'Solicitação', start: a.inicio, end: a.fim,
+        color: { pendente: '#b8975a', confirmado: '#347c65', cancelado: '#999' }[a.status] || '#777',
+        extendedProps: { status: a.status } };
+    }),
+    eventClick: async info => {
+      if (info.event.extendedProps.status === 'cancelado') return alert('Este agendamento foi cancelado.');
+      const acao = prompt('1: confirmar reunião; 2: cancelar reunião');
+      if (!['1', '2'].includes(acao)) return;
+      if (acao === '2' && !confirm('Cancelar esta reunião?')) return;
+      const meetUrl = acao === '1' ? prompt('Link Google Meet (opcional):') : '';
+      if (meetUrl === null) return;
+      try {
+        await marcar({ id: info.event.id, acao: acao === '1' ? 'confirmar' : 'cancelar',
+          meetUrl: (meetUrl || '').trim() });
+        location.reload();
+      } catch (e) { falha('alterar a reunião', e); }
     }
-
-    const casoRef = doc(db, 'casos', c.id);
-    const acoes = document.createElement('div');
-    acoes.className = 'linha';
-    acoes.append(
-      botao('Aceitar', () => updateDoc(casoRef, { status: 'aceito' })),
-      botao('Recusar', () => updateDoc(casoRef, { status: 'recusado' }))
-    );
-
-    if (estagiarios.length) {
-      const seletor = document.createElement('select');
-      estagiarios.forEach((e) => {
-        const op = document.createElement('option');
-        op.value = e.uid;
-        op.textContent = e.nome;
-        seletor.appendChild(op);
-      });
-      acoes.append(
-        seletor,
-        botao('Passar ao estagiário', () => updateDoc(casoRef, {
-          liberadoParaEstagiario: true,
-          estagiarioUid: seletor.value,
-          status: 'com-estagiario'
-        }))
-      );
-    }
-
-    card.appendChild(acoes);
-    listaCasos.appendChild(card);
-  }
+  }).render();
 }
+const dispRef = doc(db, 'config', 'disponibilidade');
+async function carregarDisponibilidade() {
+  const snap = await getDoc(dispRef);
+  if (!snap.exists()) return;
+  const d = snap.data();
+  document.querySelectorAll('input[name=dia]').forEach(c => {
+    c.checked = (d.diasSemana || []).includes(Number(c.value));
+  });
+  document.getElementById('disp-inicio').value = d.inicio || '09:00';
+  document.getElementById('disp-fim').value = d.fim || '17:00';
+  document.getElementById('disp-duracao').value = d.duracaoMin || 30;
+}
+document.getElementById('form-disp').addEventListener('submit', async e => {
+  e.preventDefault();
+  const diasSemana = [...document.querySelectorAll('input[name=dia]:checked')].map(c => Number(c.value));
+  const inicio = document.getElementById('disp-inicio').value;
+  const fim = document.getElementById('disp-fim').value;
+  const duracaoMin = Number(document.getElementById('disp-duracao').value);
+  if (!diasSemana.length || inicio >= fim || !Number.isInteger(duracaoMin) ||
+      duracaoMin < 15 || duracaoMin > 120) {
+    mensagem('Selecione dias, início anterior ao fim e duração de 15 a 120 minutos.');
+    return;
+  }
+  try { await setDoc(dispRef, { diasSemana, inicio, fim, duracaoMin }); mensagem('Disponibilidade salva.'); }
+  catch (e) { falha('salvar disponibilidade', e); }
+});
 
-carregarCasos();
+const perfilRef = doc(db, 'site', 'perfil');
+const campos = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'jusbrasilUrl', 'agendaUrl'];
+function linha(lista, chaves, valores = {}) {
+  const wrapper = document.createElement('div'); wrapper.className = 'linha';
+  for (const [key, rotulo] of chaves) {
+    const input = document.createElement('input');
+    input.dataset.key = key; input.placeholder = rotulo;
+    input.setAttribute('aria-label', rotulo); input.value = valores[key] || '';
+    wrapper.append(input);
+  }
+  wrapper.append(botao('Remover', () => wrapper.remove())); lista.append(wrapper);
+}
+const chavesArea = [['titulo', 'Título'], ['descricao', 'Descrição']];
+const chavesStats = [['rotulo', 'Rótulo'], ['valor', 'Valor']];
+const areas = document.getElementById('lista-areas');
+const stats = document.getElementById('lista-stats');
+document.getElementById('add-area').addEventListener('click', () => linha(areas, chavesArea));
+document.getElementById('add-stat').addEventListener('click', () => linha(stats, chavesStats));
+function lerLinhas(lista) {
+  return [...lista.querySelectorAll('.linha')].map(el => {
+    const d = {};
+    el.querySelectorAll('input').forEach(input => { d[input.dataset.key] = input.value.trim(); });
+    return d;
+  }).filter(v => Object.values(v).some(Boolean));
+}
+async function carregarPerfil() {
+  const snap = await getDoc(perfilRef);
+  const p = snap.exists() ? snap.data() : {};
+  for (const c of campos) document.getElementById(c).value = p[c] || '';
+  areas.replaceChildren(); stats.replaceChildren();
+  (p.areas || []).forEach(a => linha(areas, chavesArea, a));
+  (p.estatisticas || []).forEach(a => linha(stats, chavesStats, a));
+}
+document.getElementById('form-perfil').addEventListener('submit', async e => {
+  e.preventDefault();
+  mensagem('Salvando conteúdo...');
+  try {
+    const novo = {};
+    for (const c of campos) novo[c] = document.getElementById(c).value.trim();
+    novo.areas = lerLinhas(areas);
+    novo.estatisticas = lerLinhas(stats);
+    novo.atualizadoEm = new Date().toISOString();
+    const foto = document.getElementById('foto').files[0];
+    if (foto) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(foto.type) || foto.size > 5 * 1024 * 1024) {
+        mensagem('Foto inválida. Utilize JPEG, PNG ou WEBP com até 5 MB.'); return;
+      }
+      const destino = ref(storage, 'site/foto-perfil');
+      await uploadBytes(destino, foto, { contentType: foto.type });
+      novo.fotoUrl = await getDownloadURL(destino);
+    }
+    await setDoc(perfilRef, novo, { merge: true });
+    mensagem('Informações institucionais salvas.');
+  } catch (e) { falha('salvar conteúdo institucional', e); }
+});
+
+let equipe = [];
 async function carregarEquipe() {
-  const area = document.getElementById('lista-clientes');
-  area.replaceChildren();
-
-  const clientes = await getDocs(query(collection(db, 'users'), where('role', '==', 'cliente')));
-  clientes.docs.forEach((d) => {
-    const linha = document.createElement('div');
-    linha.className = 'linha';
-    const nome = document.createElement('span');
-    nome.textContent = d.data().nome + ' (' + d.data().email + ')';
-    linha.append(nome, botao('Tornar estagiário', async () => {
-      await updateDoc(doc(db, 'users', d.id), { role: 'estagiario' });
-      carregarEquipe();
-    }));
-    area.appendChild(linha);
+  const lista = document.getElementById('lista-clientes');
+  const seletor = document.getElementById('tarefa-estagiario');
+  lista.replaceChildren();
+  const usuarios = await getDocs(collection(db, 'users'));
+  equipe = usuarios.docs.map(d => ({ uid: d.id, ...d.data() }));
+  seletor.replaceChildren();
+  const vazio = document.createElement('option'); vazio.value = ''; vazio.textContent = 'Selecione um estagiário';
+  seletor.append(vazio);
+  equipe.filter(p => p.role === 'estagiario').forEach(p => {
+    const op = document.createElement('option'); op.value = p.uid; op.textContent = p.nome || p.email;
+    seletor.append(op);
+  });
+  const clientes = equipe.filter(p => p.role === 'cliente');
+  if (!clientes.length) lista.textContent = 'Nenhum cliente disponível para atribuição.';
+  clientes.forEach(p => {
+    const item = document.createElement('div'); item.className = 'linha equipe-linha';
+    const nome = document.createElement('span'); nome.textContent = (p.nome || 'Cliente') + ' — ' + (p.email || '');
+    item.append(nome, botao('Conceder papel de estagiário', async () => {
+      if (!confirm('Confirma a autorização de acesso à equipe para esta conta?')) return;
+      await updateDoc(doc(db, 'users', p.uid), { role: 'estagiario' });
+      await carregarEquipe(); mensagem('Papel atualizado.');
+    })); lista.append(item);
   });
 }
-
-carregarEquipe();
-await addDoc(collection(db, 'tarefas'), {
-  titulo,
-  data,
-  estagiarioUid,
-  concluida: false,
-  criadoEm: serverTimestamp()
+async function carregarCasos() {
+  const lista = document.getElementById('lista-casos'); lista.replaceChildren();
+  const result = await getDocs(collection(db, 'casos'));
+  const casos = result.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a,b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+  if (!casos.length) lista.textContent = 'Nenhuma solicitação recebida.';
+  for (const c of casos) {
+    const card = document.createElement('article'); card.className = 'caso';
+    const h = document.createElement('h3'); h.textContent = (c.clienteNome || 'Cliente') + ' — ' + (c.assunto || 'Caso');
+    const p = document.createElement('p'); p.textContent = c.resumo || '';
+    const situacao = document.createElement('span'); situacao.className = 'etiqueta';
+    situacao.textContent = c.status === 'uploading' ? 'Envio incompleto' : c.status;
+    card.append(h, situacao, p);
+    for (const a of c.arquivos || []) {
+      const b = botao('Abrir: ' + a.nome, async () => {
+        const url = await getDownloadURL(ref(storage, a.caminho));
+        window.open(url, '_blank', 'noopener');
+      });
+      card.append(b);
+    }
+    if (c.status !== 'uploading') {
+      const actions = document.createElement('div'); actions.className = 'linha';
+      actions.append(
+        botao('Aceitar', async () => { await updateDoc(doc(db, 'casos', c.id), { status: 'aceito' }); await carregarCasos(); }),
+        botao('Recusar', async () => { await updateDoc(doc(db, 'casos', c.id), { status: 'recusado', liberadoParaEstagiario: false }); await carregarCasos(); })
+      );
+      const estagiarios = equipe.filter(e => e.role === 'estagiario');
+      if (estagiarios.length) {
+        const select = document.createElement('select'); select.setAttribute('aria-label', 'Estagiário responsável');
+        for (const e of estagiarios) {
+          const opt = document.createElement('option'); opt.value = e.uid; opt.textContent = e.nome || e.email;
+          opt.selected = e.uid === c.estagiarioUid; select.append(opt);
+        }
+        actions.append(select, botao('Atribuir', async () => {
+          await updateDoc(doc(db, 'casos', c.id), {
+            estagiarioUid: select.value, liberadoParaEstagiario: true, status: 'com-estagiario'
+          });
+          await carregarCasos();
+        }));
+      }
+      if (c.liberadoParaEstagiario) {
+        actions.append(botao('Revogar acesso da equipe', async () => {
+          await updateDoc(doc(db, 'casos', c.id), { liberadoParaEstagiario: false, estagiarioUid: null, status: 'aceito' });
+          await carregarCasos();
+        }));
+      }
+      card.append(actions);
+    }
+    lista.append(card);
+  }
+}
+async function carregarTarefas() {
+  const lista = document.getElementById('lista-tarefas'); lista.replaceChildren();
+  const result = await getDocs(collection(db, 'tarefas'));
+  const tarefas = result.docs.map(d => ({ id:d.id, ...d.data() }))
+    .sort((a,b) => String(a.data).localeCompare(String(b.data)));
+  if (!tarefas.length) lista.textContent = 'Nenhuma tarefa cadastrada.';
+  for (const t of tarefas) {
+    const card = document.createElement('article'); card.className = 'caso';
+    const h = document.createElement('h3'); h.textContent = t.titulo;
+    const p = document.createElement('p');
+    const resp = equipe.find(e => e.uid === t.estagiarioUid);
+    p.textContent = (t.data || '') + ' — ' + (resp?.nome || resp?.email || 'Não atribuído')
+      + ' — ' + (t.concluida ? 'Concluída' : 'Pendente');
+    card.append(h,p,botao('Excluir', async () => {
+      if (!confirm('Excluir esta tarefa?')) return;
+      await deleteDoc(doc(db, 'tarefas', t.id)); await carregarTarefas();
+    }));
+    lista.append(card);
+  }
+}
+document.getElementById('form-tarefa').addEventListener('submit', async e => {
+  e.preventDefault();
+  const titulo = document.getElementById('tarefa-titulo').value.trim();
+  const data = document.getElementById('tarefa-data').value;
+  const estagiarioUid = document.getElementById('tarefa-estagiario').value;
+  if (titulo.length < 3 || titulo.length > 150 || !/^\d{4}-\d{2}-\d{2}$/.test(data)
+      || !equipe.some(p => p.uid === estagiarioUid && p.role === 'estagiario')) {
+    mensagem('Verifique descrição, data e estagiário responsável.'); return;
+  }
+  try {
+    await addDoc(collection(db, 'tarefas'), { titulo, data, estagiarioUid,
+      concluida: false, criadoEm: serverTimestamp() });
+    e.target.reset(); mensagem('Tarefa criada.'); await carregarTarefas();
+  } catch (error) { falha('criar a tarefa', error); }
 });
+for (const [nome,fn] of [
+  ['agenda',carregarAgenda], ['disponibilidade',carregarDisponibilidade],
+  ['perfil',carregarPerfil], ['equipe',carregarEquipe],
+  ['casos',carregarCasos], ['tarefas',carregarTarefas]
+]) {
+  try { await fn(); } catch (e) { falha('carregar ' + nome, e); }
+}
