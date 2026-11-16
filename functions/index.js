@@ -83,7 +83,7 @@ exports.criarAgendamento = onCall({
     const [ocupado, agendado, quota, usuario] = await Promise.all([
       tx.get(reservaRef), tx.get(agendaRef), tx.get(quotaRef), tx.get(usuarioRef)
     ]);
-    if (ocupado.exists || agendado.exists) {
+    if (ocupado.exists || (agendado.exists && agendado.get("status") !== "cancelado")) {
       if (agendado.exists && agendado.get("clienteUid") === uid &&
           agendado.get("status") !== "cancelado") {
         return { id, jaExistia: true };
@@ -98,14 +98,16 @@ exports.criarAgendamento = onCall({
     const inicio = new Date(inicioMs);
     const fim = new Date(inicioMs + duracao * 60000);
     tx.create(reservaRef, { inicio: inicio.toISOString(), clienteUid: uid });
-    tx.create(agendaRef, {
+    const agendamento = {
       clienteUid: uid,
       clienteNome: String(usuario.get("nome") || "").slice(0, 120),
       clienteEmail: String(usuario.get("email") || "").slice(0, 180),
       inicio: inicio.toISOString(), fim: fim.toISOString(),
       status: "pendente",
       criadoEm: admin.firestore.FieldValue.serverTimestamp()
-    });
+    };
+    if (agendado.exists) tx.set(agendaRef, agendamento);
+    else tx.create(agendaRef, agendamento);
     tx.set(quotaRef, {
       dia, quantidade: usados + 1,
       atualizadoEm: admin.firestore.FieldValue.serverTimestamp()
