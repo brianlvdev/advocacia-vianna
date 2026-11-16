@@ -1,10 +1,12 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db, storage, functions } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
   collection, doc, setDoc, updateDoc, getDocs, query, where, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+const cancelarReuniao = httpsCallable(functions, 'cancelarMeuAgendamento');
 
 const { usuario } = await exigirPapel(['cliente']);
 document.getElementById('boas-vindas').textContent =
@@ -117,7 +119,7 @@ async function carregarReunioes() {
   try {
     const resultado = await getDocs(query(collection(db, 'agendamentos'),
       where('clienteUid', '==', usuario.uid)));
-    const reunioes = resultado.docs.map(d => d.data())
+    const reunioes = resultado.docs.map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => a.inicio.localeCompare(b.inicio));
     lista.replaceChildren();
     if (!reunioes.length) lista.textContent = 'Nenhuma reunião solicitada.';
@@ -129,6 +131,25 @@ async function carregarReunioes() {
       const p = document.createElement('p');
       p.textContent = 'Situação: ' + a.status;
       card.append(h, p);
+      if (a.status === 'pendente') {
+        const cancelar = document.createElement('button');
+        cancelar.type = 'button';
+        cancelar.className = 'btn btn-secundario';
+        cancelar.textContent = 'Cancelar solicitação';
+        cancelar.addEventListener('click', async () => {
+          if (!confirm('Cancelar esta solicitação de reunião?')) return;
+          cancelar.disabled = true;
+          try {
+            await cancelarReuniao({ id: a.id });
+            await carregarReunioes();
+          } catch (erro) {
+            console.error(erro);
+            alert('Não foi possível cancelar. Verifique se a reunião ainda está pendente.');
+            cancelar.disabled = false;
+          }
+        });
+        card.append(cancelar);
+      }
       if (a.status === 'confirmado' && a.meetUrl) {
         const link = document.createElement('a');
         link.href = a.meetUrl;
