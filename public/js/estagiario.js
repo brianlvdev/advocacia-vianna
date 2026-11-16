@@ -1,6 +1,7 @@
 import { exigirPapel } from './guard.js';
-import { auth, db } from './firebase-config.js';
+import { auth, db, storage } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { ref, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 import {
   collection, doc, getDocs, query, where, updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
@@ -66,6 +67,23 @@ try {
     const texto = document.createElement('p');
     texto.textContent = c.resumo;
     card.append(titulo, texto);
+    for (const documento of c.arquivos || []) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn-secundario';
+      b.textContent = 'Abrir documento: ' + documento.nome;
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        try {
+          const url = await getDownloadURL(ref(storage, documento.caminho));
+          window.open(url, '_blank', 'noopener');
+        } catch (erro) {
+          console.error(erro);
+          alert('Acesso ao documento negado ou arquivo indisponível.');
+        } finally { b.disabled = false; }
+      });
+      card.appendChild(b);
+    }
     areaCasos.appendChild(card);
   });
 } catch (erro) {
