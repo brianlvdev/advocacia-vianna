@@ -42,7 +42,7 @@
 <label>Apresentação profissional<textarea id="resumo" maxlength="4000"></textarea></label>
 <label>Foto de perfil<input type="file" id="foto" accept="image/jpeg,image/png,image/webp"></label>
 <div class="grid-form">
-<label>Endereço<input id="endereco" maxlength="250"></label>
+<label>Endereço do escritório<input id="endereco" maxlength="250" required placeholder="Alameda Montevideo, 293 - Sala 206 - Santa Maria/RS"></label>
 <label>WhatsApp<input id="whatsapp" placeholder="55 + DDD + número"></label>
 <label>E-mail<input id="email" type="email"></label>
 <label>Instagram (nome de usuário)<input id="instagram"></label>
@@ -50,11 +50,19 @@
 <label>Perfil no Jusbrasil<input id="jusbrasilUrl" type="url"></label>
 <label>Agenda externa (opcional)<input id="agendaUrl" type="url"></label>
 </div>
-<fieldset><legend>Áreas de atuação</legend><div id="lista-areas" class="linhas-dinamicas"></div><button class="btn btn-secundario" type="button" id="add-area">Adicionar área</button></fieldset>
-<fieldset><legend>Informações institucionais</legend>
-<p>Publique apenas informações verificáveis. Evite promessas de resultado e números sem comprovação.</p>
-<div id="lista-stats" class="linhas-dinamicas"></div><button class="btn btn-secundario" type="button" id="add-stat">Adicionar informação</button></fieldset>
+<fieldset><legend>Áreas de atuação</legend>
+<p>Cadastre, edite ou remova cada área. O percentual é opcional e, quando informado, aparece em um círculo na página pública.</p>
+<div id="lista-areas" class="linhas-dinamicas"></div>
+<button class="btn btn-secundario" type="button" id="add-area">Adicionar área</button></fieldset>
+<fieldset><legend>Indicadores percentuais adicionais</legend>
+<p>Use apenas percentuais verdadeiros, definidos manualmente pelo escritório (0 a 100). Estes dados não são extraídos automaticamente do Jusbrasil e não devem representar promessa de resultado.</p>
+<div id="lista-stats" class="linhas-dinamicas"></div>
+<button class="btn btn-secundario" type="button" id="add-stat">Adicionar indicador percentual</button></fieldset>
+<p id="aviso-conteudo-teste" class="aviso" role="status" hidden></p>
+<div class="linha">
 <button class="btn" type="submit">Salvar conteúdo institucional</button>
+<button class="btn btn-secundario" type="button" id="limpar-conteudo-teste">Limpar dados de teste do Firebase</button>
+</div>
 </form></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>

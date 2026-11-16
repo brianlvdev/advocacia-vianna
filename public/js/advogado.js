@@ -7,6 +7,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+import { enderecoSeguro, ehTextoTeste, limparBioTeste, lerPercentual, registroTeste }
+  from './conteudo-institucional.js';
 
 const { usuario } = await exigirPapel(['admin']);
 const status = document.getElementById('aviso');
@@ -86,59 +88,181 @@ document.getElementById('form-disp').addEventListener('submit', async e => {
 });
 
 const perfilRef = doc(db, 'site', 'perfil');
-const campos = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'linkedinUrl', 'jusbrasilUrl', 'agendaUrl'];
-function linha(lista, chaves, valores = {}) {
-  const wrapper = document.createElement('div'); wrapper.className = 'linha';
-  for (const [key, rotulo] of chaves) {
-    const input = document.createElement('input');
-    input.dataset.key = key; input.placeholder = rotulo;
-    input.setAttribute('aria-label', rotulo); input.value = valores[key] || '';
-    wrapper.append(input);
-  }
-  wrapper.append(botao('Remover', () => wrapper.remove())); lista.append(wrapper);
-}
-const chavesArea = [['titulo', 'Título'], ['descricao', 'Descrição']];
-const chavesStats = [['rotulo', 'Rótulo'], ['valor', 'Valor']];
+const CAMPOS = ['resumo', 'endereco', 'whatsapp', 'email', 'instagram', 'linkedinUrl', 'jusbrasilUrl', 'agendaUrl'];
+const camposArea = [
+  { chave: 'titulo', rotulo: 'Área de atuação', tipo: 'text', obrigatorio: true },
+  { chave: 'descricao', rotulo: 'Descrição da área', tipo: 'text' },
+  { chave: 'percentual', rotulo: 'Percentual de atuação (0 a 100, opcional)', tipo: 'number' }
+];
+const camposIndicador = [
+  { chave: 'rotulo', rotulo: 'Nome do indicador', tipo: 'text', obrigatorio: true },
+  { chave: 'valor', rotulo: 'Percentual (0 a 100)', tipo: 'number' }
+];
 const areas = document.getElementById('lista-areas');
 const stats = document.getElementById('lista-stats');
-document.getElementById('add-area').addEventListener('click', () => linha(areas, chavesArea));
-document.getElementById('add-stat').addEventListener('click', () => linha(stats, chavesStats));
-function lerLinhas(lista) {
-  return [...lista.querySelectorAll('.linha')].map(el => {
-    const d = {};
-    el.querySelectorAll('input').forEach(input => { d[input.dataset.key] = input.value.trim(); });
-    return d;
-  }).filter(v => Object.values(v).some(Boolean));
+const enderecoInput = document.getElementById('endereco');
+const formularioPerfil = document.getElementById('form-perfil');
+const botaoSalvarPerfil = formularioPerfil.querySelector('button[type="submit"]');
+
+function adicionarLinha(lista, definicoes, valores = {}) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'linha linha-conteudo';
+  for (const campo of definicoes) {
+    const rotulo = document.createElement('label');
+    rotulo.className = 'campo-dinamico';
+    rotulo.textContent = campo.rotulo;
+    const input = document.createElement('input');
+    input.dataset.key = campo.chave;
+    input.type = campo.tipo;
+    if (campo.tipo === 'number') {
+      input.min = '0'; input.max = '100'; input.step = '0.1';
+    }
+    const original = valores[campo.chave];
+    const num = campo.tipo === 'number' ? lerPercentual(original) : null;
+    input.value = campo.tipo === 'number'
+      ? (num === null ? '' : String(num))
+      : (original ?? '');
+    rotulo.append(input);
+    wrapper.append(rotulo);
+  }
+  wrapper.append(botao('Remover', () => wrapper.remove()));
+  lista.append(wrapper);
 }
+document.getElementById('add-area').addEventListener('click', () => adicionarLinha(areas, camposArea));
+document.getElementById('add-stat').addEventListener('click', () => adicionarLinha(stats, camposIndicador));
+
+function lerLista(lista, tipo) {
+  const resultado = [];
+  for (const wrapper of lista.querySelectorAll('.linha-conteudo')) {
+    const dados = {};
+    for (const input of wrapper.querySelectorAll('input[data-key]')) {
+      dados[input.dataset.key] = input.value.trim();
+    }
+    if (Object.values(dados).every(v => v === '')) continue;
+    if (tipo === 'areas') {
+      if (!dados.titulo) throw new Error('Cada área precisa de um título. Edite ou remova a linha incompleta.');
+      if (ehTextoTeste(dados.titulo)) continue;
+      const area = { titulo: dados.titulo, descricao: limparBioTeste(dados.descricao) };
+      if (dados.percentual !== '') {
+        const percentual = lerPercentual(dados.percentual);
+        if (percentual === null) throw new Error('Informe um percentual entre 0 e 100 para ' + area.titulo + '.');
+        area.percentual = percentual;
+      }
+      resultado.push(area);
+    } else {
+      if (!dados.rotulo) throw new Error('Cada indicador precisa de um nome. Edite ou remova a linha incompleta.');
+      if (ehTextoTeste(dados.rotulo)) continue;
+      const percentual = lerPercentual(dados.valor);
+      if (percentual === null) throw new Error('Informe um percentual entre 0 e 100 para ' + dados.rotulo + '.');
+      resultado.push({ rotulo: dados.rotulo, valor: percentual });
+    }
+  }
+  return resultado;
+}
+
 async function carregarPerfil() {
   const snap = await getDoc(perfilRef);
   const p = snap.exists() ? snap.data() : {};
-  for (const c of campos) document.getElementById(c).value = p[c] || '';
+  for (const campo of CAMPOS) {
+    const input = document.getElementById(campo);
+    input.value = campo === 'endereco' ? enderecoSeguro(p.endereco) : (p[campo] || '');
+  }
+  if (typeof p.resumo === 'string') {
+    document.getElementById('resumo').value = limparBioTeste(p.resumo);
+  }
   areas.replaceChildren(); stats.replaceChildren();
-  (p.areas || []).forEach(a => linha(areas, chavesArea, a));
-  (p.estatisticas || []).forEach(a => linha(stats, chavesStats, a));
+  (Array.isArray(p.areas) ? p.areas : [])
+    .filter(a => !registroTeste(a)).forEach(a => adicionarLinha(areas, camposArea, a));
+  (Array.isArray(p.estatisticas) ? p.estatisticas : [])
+    .filter(i => !registroTeste(i)).forEach(i => adicionarLinha(stats, camposIndicador, i));
+  const temTeste = (p.endereco && enderecoSeguro(p.endereco) !== p.endereco.trim()) ||
+    (p.resumo && limparBioTeste(p.resumo) !== p.resumo.trim()) ||
+    (Array.isArray(p.areas) && p.areas.some(registroTeste)) ||
+    (Array.isArray(p.estatisticas) && p.estatisticas.some(registroTeste));
+  const avisoTeste = document.getElementById('aviso-conteudo-teste');
+  avisoTeste.hidden = !temTeste;
+  avisoTeste.textContent = temTeste
+    ? 'Há dados de teste antigos no Firebase. Eles já são ocultados no site; use "Limpar dados de teste" para corrigi-los no banco.'
+    : '';
 }
-document.getElementById('form-perfil').addEventListener('submit', async e => {
-  e.preventDefault();
-  mensagem('Salvando conteúdo...');
+
+formularioPerfil.addEventListener('submit', async evento => {
+  evento.preventDefault();
+  botaoSalvarPerfil.disabled = true;
+  mensagem('Salvando informações institucionais...');
   try {
     const novo = {};
-    for (const c of campos) novo[c] = document.getElementById(c).value.trim();
-    novo.areas = lerLinhas(areas);
-    novo.estatisticas = lerLinhas(stats);
+    for (const campo of CAMPOS) novo[campo] = document.getElementById(campo).value.trim();
+    if (!novo.endereco || ehTextoTeste(novo.endereco) || /rua\s+do\s+doce/i.test(novo.endereco)) {
+      throw new Error('Informe o endereço verdadeiro do escritório.');
+    }
+    novo.resumo = limparBioTeste(novo.resumo);
+    novo.areas = lerLista(areas, 'areas');
+    novo.estatisticas = lerLista(stats, 'estatisticas');
     novo.atualizadoEm = new Date().toISOString();
     const foto = document.getElementById('foto').files[0];
     if (foto) {
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(foto.type) || foto.size > 5 * 1024 * 1024) {
-        mensagem('Foto inválida. Utilize JPEG, PNG ou WEBP com até 5 MB.'); return;
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(foto.type)
+          || foto.size > 5 * 1024 * 1024) {
+        throw new Error('A foto deve ser JPEG, PNG ou WEBP com até 5 MB.');
       }
       const destino = ref(storage, 'site/foto-perfil');
       await uploadBytes(destino, foto, { contentType: foto.type });
       novo.fotoUrl = await getDownloadURL(destino);
     }
     await setDoc(perfilRef, novo, { merge: true });
-    mensagem('Informações institucionais salvas.');
-  } catch (e) { falha('salvar conteúdo institucional', e); }
+    document.getElementById('aviso-conteudo-teste').hidden = true;
+    mensagem('Informações salvas. Alterações de áreas, percentuais e exclusões aparecerão no site.');
+    await carregarPerfil();
+  } catch (erro) {
+    console.error('Falha ao salvar perfil', erro);
+    mensagem(erro.message || 'Não foi possível salvar o perfil.');
+  } finally {
+    botaoSalvarPerfil.disabled = false;
+  }
+});
+
+// Corrige somente os valores de demonstração conhecidos, preservando
+// os demais dados institucionais e exigindo confirmação do administrador.
+document.getElementById('limpar-conteudo-teste').addEventListener('click', async evento => {
+  const botaoLimpar = evento.currentTarget;
+  botaoLimpar.disabled = true;
+  try {
+    const snap = await getDoc(perfilRef);
+    if (!snap.exists()) {
+      mensagem('O perfil ainda não existe no Firestore. Preencha e salve o formulário.');
+      return;
+    }
+    const atual = snap.data();
+    const ajustes = {};
+    const corrigirEndereco = enderecoSeguro(atual.endereco);
+    if (typeof atual.endereco !== 'string' || corrigirEndereco !== atual.endereco.trim()) {
+      ajustes.endereco = corrigirEndereco;
+    }
+    if (typeof atual.resumo === 'string') {
+      const resumoLimpo = limparBioTeste(atual.resumo);
+      if (resumoLimpo !== atual.resumo.trim()) ajustes.resumo = resumoLimpo;
+    }
+    if (Array.isArray(atual.areas)) {
+      const mantidas = atual.areas.filter(item => !registroTeste(item));
+      if (mantidas.length !== atual.areas.length) ajustes.areas = mantidas;
+    }
+    if (Array.isArray(atual.estatisticas)) {
+      const mantidas = atual.estatisticas.filter(item => !registroTeste(item));
+      if (mantidas.length !== atual.estatisticas.length) ajustes.estatisticas = mantidas;
+    }
+    const camposAlterados = Object.keys(ajustes);
+    if (!camposAlterados.length) {
+      mensagem('Nenhum dos dados de teste conhecidos foi encontrado no Firebase.');
+      return;
+    }
+    if (!confirm('Corrigir no Firestore os dados de teste nos campos: ' +
+      camposAlterados.join(', ') + '? Essa operação sobrescreve apenas esses campos.')) return;
+    await updateDoc(perfilRef, { ...ajustes, atualizadoEm: new Date().toISOString() });
+    await carregarPerfil();
+    mensagem('Dados de teste corrigidos no Firebase. Atualize a página pública para conferir.');
+  } catch (erro) { falha('limpar os dados de teste', erro); }
+  finally { botaoLimpar.disabled = false; }
 });
 
 let equipe = [];

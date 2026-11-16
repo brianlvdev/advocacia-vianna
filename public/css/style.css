@@ -233,3 +233,33 @@ section { scroll-margin-top: 105px; }
 .localizacao-mapa iframe{display:block;position:absolute;inset:0;width:100%;height:100%;border:0}
 @media(max-width:920px){.localizacao-grid{grid-template-columns:1fr}.localizacao-mapa{min-height:390px}}
 @media(max-width:760px){.contato-acoes{max-width:none}.localizacao-bloco{margin-top:70px;padding-top:58px}.localizacao-mapa{min-height:320px}}
+
+/* Indicadores circulares de atuação (0–100%). */
+.informacoes-secao .indicadores-nota{
+  max-width:var(--largura); margin:0 auto 24px; color:var(--muted);
+  font-size:.88rem; line-height:1.7;
+}
+.card-percentual{
+  min-height:260px; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:24px; text-align:center; padding:34px 22px;
+}
+.grafico-percentual{
+  --progresso:0%;
+  width:144px; height:144px; border-radius:50%; flex:0 0 auto;
+  display:grid; place-items:center;
+  background:conic-gradient(var(--dourado) var(--progresso), #e7e4dc 0);
+  position:relative;
+}
+.grafico-percentual::before{
+  content:''; position:absolute; inset:16px; border-radius:50%;
+  background:#fff;
+}
+.grafico-miolo{position:relative; z-index:1; color:var(--azul); line-height:1}
+.grafico-miolo strong{font:600 clamp(1.7rem,3vw,2.15rem) 'Playfair Display',Georgia,serif;}
+.percentual-rotulo{font-size:1rem!important;font-weight:700;color:var(--azul)!important;max-width:230px;margin:0!important}
+@media (max-width:760px){.grafico-percentual{width:130px;height:130px}.card-percentual{min-height:230px}}
+/* Campos repetíveis do painel do advogado. */
+.linha-conteudo{align-items:end!important; gap:12px!important}
+.campo-dinamico{flex:1 1 185px; min-width:0; display:grid!important; gap:7px!important; font-weight:600!important}
+.linha-conteudo .campo-dinamico input{width:100%!important;min-width:0!important}
+.linha-conteudo>.btn{margin-bottom:0}
