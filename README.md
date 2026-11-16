@@ -38,3 +38,38 @@ O calendário do cliente depende da callable `criarAgendamento`; o painel admini
 Os downloads atuais usam URLs com tokens do Firebase Storage, que podem continuar acessíveis a quem as possuir. Para documentos confidenciais, considere download intermediado por servidor e credenciais temporárias, com revogação. Não compartilhe URLs de arquivos.
 
 **Limitação da revisão:** as alterações foram realizadas por leitura e edição do repositório; não houve execução do Firebase Emulator Suite, testes de integração, deploy nem auditoria de produção. Não considere o ambiente validado para dados jurídicos reais até concluir esses passos.
+
+## Funcionalidades adicionadas à área administrativa e do cliente
+
+- Gestão da disponibilidade e confirmação/cancelamento de reuniões com Google Meet opcional.
+- Consulta de horários livres calculada pelo servidor no fuso `America/Sao_Paulo` via callable `listarHorarios`.
+- Cliente pode cancelar solicitações de reunião ainda pendentes por `cancelarMeuAgendamento`. Solicitações confirmadas só podem ser canceladas pelo escritório.
+- Gestão de solicitações jurídicas: aceitar, recusar, atribuir a estagiário e revogar acesso.
+- Gestão da equipe: promoção manual de cliente para papel `estagiario`, mediante confirmação; não há autoatribuição de privilégios.
+- Gestão de tarefas: criar e excluir pelo administrador; concluir/reabrir tarefas pelo estagiário designado.
+- Estagiário pode abrir documentos exclusivamente de casos atribuídos e liberados.
+- Índice composto para consulta de casos atribuídos à equipe.
+
+### Matriz de permissões esperadas
+
+| Recurso | Cliente | Estagiário designado | Administrador |
+| --- | --- | --- | --- |
+| Ver solicitações de casos | Apenas próprios | Apenas atribuídos e liberados | Todos |
+| Anexar documentos no envio inicial | Sim, até finalizar | Não | Foto institucional apenas |
+| Abrir documentos jurídicos | Apenas próprios | Somente atribuídos e liberados | Todos |
+| Reservar horário disponível | Sim, mediante callable | Não | Não |
+| Cancelar solicitação pendente própria | Sim, mediante callable | Não | Administra todas via callable |
+| Criar/excluir tarefas | Não | Não | Sim |
+| Marcar própria tarefa concluída | Não | Sim | Sim |
+| Editar papel de usuário | Não | Não | Sim |
+
+### Pendências de validação
+
+1. Executar o Firebase Emulator Suite e testar efetivamente as regras, principalmente uploads e consultas compostas.
+2. Rodar testes de concorrência do agendamento e conferir faturamento/habilitação de Functions.
+3. Definir política de exclusão/retomada de envios incompletos (`status: uploading`).
+4. Substituir links duradouros do Firebase Storage por estratégia de download temporário para documentação confidencial.
+5. Integrar App Check com implementação web e só então ativar enforcement nas callables.
+6. Completar política de privacidade, retenção documental, backups, auditoria de acesso e identificação formal do escritório.
+
+**Nota:** as alterações estão exclusivamente na branch de revisão. Não foi feito deploy nem foram testadas contra o projeto Firebase real.
