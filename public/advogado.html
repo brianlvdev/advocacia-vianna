@@ -1,82 +1,87 @@
 <!DOCTYPE html>
-<html lang='pt-BR'>
-
+<html lang="pt-BR">
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <title>Painel do Advogado</title>
-  <link rel='stylesheet' href='css/style.css'>
-  <link rel='stylesheet' href='css/painel.css'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gestão do escritório | Advocacia Vianna</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/painel.css">
 </head>
-
 <body>
-
-  <header class='topo'>
-    <a href='index.html' class='marca'><img src='img/logo.png' alt='Logo Advocacia Vianna'></a>
-    <nav>
-      <a href='index.html'>Ver site</a>
-      <button id='btn-sair' class='btn'>Sair</button>
-    </nav>
+  <header class="topo">
+    <a href="index.html" class="marca"><img src="img/logo.png" alt="Advocacia Vianna"></a>
+    <nav><a href="index.html">Ver site</a><button id="btn-sair" class="btn">Sair</button></nav>
   </header>
-
-  <main class='painel'>
-    <h1>Painel do Advogado</h1>
-    <p id='boas-vindas'></p>
-
-    <h2>Disponibilidade para reuniões</h2>
-        <h2>Agenda</h2>
-    <div id='calendario'></div>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js'></script>
-
-    <form id='form-disp'>
-      <fieldset>
-        <legend>Dias da semana</legend>
-        <label><input type='checkbox' name='dia' value='1'> Segunda</label>
-        <label><input type='checkbox' name='dia' value='2'> Terça</label>
-        <label><input type='checkbox' name='dia' value='3'> Quarta</label>
-        <label><input type='checkbox' name='dia' value='4'> Quinta</label>
-        <label><input type='checkbox' name='dia' value='5'> Sexta</label>
-      </fieldset>
-      <label>Início <input type='time' id='disp-inicio' value='09:00'></label>
-      <label>Fim <input type='time' id='disp-fim' value='17:00'></label>
-      <label>Duração (minutos) <input type='number' id='disp-duracao' value='30' min='15' step='15'></label>
-      <button class='btn' type='submit'>Salvar disponibilidade</button>
-    </form>
-
-    <form id='form-perfil'>
-      <label>Resumo (Sobre mim)
-        <textarea id='resumo'></textarea>
-      </label>
-      <label>Foto de perfil
-        <input type='file' id='foto' accept='image/*'>
-      </label>
-      <label>Endereço <input id='endereco'></label>
-      <label>WhatsApp (só números, com 55 e DDD) <input id='whatsapp'></label>
-      <label>E-mail <input id='email' type='email'></label>
-      <label>Instagram (usuário) <input id='instagram'></label>
-      <label>Link do perfil no JusBrasil <input id='jusbrasilUrl' type='url'></label>
-      <label>Link da agenda de compromissos (Google) <input id='agendaUrl' type='url'></label>
-      <h2>Casos recebidos</h2><div id='lista-casos' class='lista-casos'></div>
-      <h2>Equipe</h2><div id='lista-clientes'></div>
-      <fieldset>
-        <legend>Áreas de atuação</legend>
-        <div id='lista-areas'></div>
-        <button type='button' id='add-area'>Adicionar área</button>
-      </fieldset>
-
-      <fieldset>
-        <legend>Estatísticas</legend>
-        <div id='lista-stats'></div>
-        <button type='button' id='add-stat'>Adicionar estatística</button>
-      </fieldset>
-      <!--lembrar de colcar esse trem-->
-      <iframe src='COLE_O_ENDERECO_DO_GOOGLE_AGENDA' style='border:0; width:100%; height:600px;'></iframe>
-      <button class='btn' type='submit'>Salvar alterações</button>
-      <p id='aviso' class='aviso'></p>
-    </form>
+  <main class="painel">
+    <p class="sobretitulo">Área restrita</p>
+    <h1>Gestão do escritório</h1>
+    <p id="boas-vindas"></p>
+    <p id="aviso" class="aviso" role="status" aria-live="polite"></p>
+    <section class="painel-secao">
+      <h2>Agenda de atendimentos</h2>
+      <p>Selecione uma reunião para confirmar ou cancelar a solicitação.</p>
+      <div id="calendario"></div>
+    </section>
+    <section class="painel-secao">
+      <h2>Disponibilidade para reuniões</h2>
+      <form id="form-disp">
+        <fieldset>
+          <legend>Dias da semana</legend>
+          <div class="linha">
+            <label><input type="checkbox" name="dia" value="1"> Segunda</label>
+            <label><input type="checkbox" name="dia" value="2"> Terça</label>
+            <label><input type="checkbox" name="dia" value="3"> Quarta</label>
+            <label><input type="checkbox" name="dia" value="4"> Quinta</label>
+            <label><input type="checkbox" name="dia" value="5"> Sexta</label>
+          </div>
+        </fieldset>
+        <div class="grid-form">
+          <label>Início <input type="time" id="disp-inicio" value="09:00" required></label>
+          <label>Fim <input type="time" id="disp-fim" value="17:00" required></label>
+          <label>Duração (minutos) <input type="number" id="disp-duracao" value="30" min="15" max="120" step="15" required></label>
+        </div>
+        <button class="btn" type="submit">Salvar disponibilidade</button>
+      </form>
+    </section>
+    <section class="painel-secao">
+      <h2>Casos recebidos</h2><div id="lista-casos" class="lista-casos"></div>
+    </section>
+    <section class="painel-secao">
+      <h2>Equipe</h2>
+      <p>Conceda acesso somente a pessoas autorizadas e vinculadas ao escritório.</p>
+      <div id="lista-clientes" class="lista-casos"></div>
+    </section>
+    <section class="painel-secao">
+      <h2>Conteúdo do site</h2>
+      <form id="form-perfil">
+        <label>Apresentação profissional <textarea id="resumo" maxlength="4000"></textarea></label>
+        <label>Foto de perfil <input type="file" id="foto" accept="image/jpeg,image/png,image/webp"></label>
+        <div class="grid-form">
+          <label>Endereço <input id="endereco"></label>
+          <label>WhatsApp <input id="whatsapp" placeholder="55 + DDD + telefone"></label>
+          <label>E-mail <input id="email" type="email"></label>
+          <label>Instagram <input id="instagram"></label>
+          <label>Perfil no Jusbrasil <input id="jusbrasilUrl" type="url"></label>
+          <label>Link externo de agenda <input id="agendaUrl" type="url"></label>
+        </div>
+        <fieldset>
+          <legend>Áreas de atuação</legend>
+          <div id="lista-areas" class="linhas-dinamicas"></div>
+          <button type="button" id="add-area" class="btn btn-secundario">Adicionar área</button>
+        </fieldset>
+        <fieldset>
+          <legend>Informações institucionais</legend>
+          <p>Não publique estatísticas sem comprovação nem alegações de êxito ou resultados garantidos.</p>
+          <div id="lista-stats" class="linhas-dinamicas"></div>
+          <button type="button" id="add-stat" class="btn btn-secundario">Adicionar informação</button>
+        </fieldset>
+        <button class="btn" type="submit">Salvar alterações do site</button>
+      </form>
+    </section>
   </main>
-  <script type='module' src='js/advogado.js'></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+  <script type="module" src="js/advogado.js"></script>
 </body>
-
 </html>
