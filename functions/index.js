@@ -187,3 +187,72 @@ exports.cancelarMeuAgendamento = onCall({
     return { ok: true };
   });
 });
+
+
+function partesNoFuso(data) {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: ZONA, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  }).formatToParts(data);
+  const obj = Object.fromEntries(partes.map(({ type, value }) => [type, Number(value)]));
+  return obj;
+}
+function deslocamentoFusoMinutos(data) {
+  const x = partesNoFuso(data);
+  const asUTC = Date.UTC(x.year, x.month - 1, x.day, x.hour, x.minute, x.second);
+  return Math.round((asUTC - data.getTime()) / 60000);
+}
+function instanteHorarioLocal(ano, mes, dia, hora, minuto) {
+  let t = Date.UTC(ano, mes - 1, dia, hora, minuto);
+  t -= deslocamentoFusoMinutos(new Date(t)) * 60000;
+  t = Date.UTC(ano, mes - 1, dia, hora, minuto) -
+    deslocamentoFusoMinutos(new Date(t)) * 60000;
+  return t;
+}
+
+// O navegador não recebe documentos da coleção de ocupação nem precisa
+// interpretar o fuso do escritório.
+exports.listarHorarios = onCall({
+  region: REGIAO, maxInstances: 5, timeoutSeconds: 30
+}, async (req) => {
+  const uid = autenticado(req);
+  await conferirPapel(uid, "cliente");
+  const snap = await db.doc("config/disponibilidade").get();
+  const cfg = snap.exists ? snap.data() :
+    { diasSemana: [1, 4], inicio: "09:00", fim: "17:00", duracaoMin: 30 };
+  const primeira = horaMinutos(cfg.inicio);
+  const ultima = horaMinutos(cfg.fim);
+  const passo = cfg.duracaoMin;
+  if (!Array.isArray(cfg.diasSemana) || !Number.isFinite(primeira) ||
+      !Number.isFinite(ultima) || !Number.isInteger(passo) ||
+      passo < 15 || passo > 120 || primeira >= ultima) {
+    falhar("failed-precondition", "Disponibilidade não configurada corretamente.");
+  }
+  const agora = Date.now();
+  const hoje = partesNoFuso(new Date(agora));
+  const limiar = instanteHorarioLocal(hoje.year, hoje.month, hoje.day, 0, 0);
+  const fimJanela = agora + 14 * 86400000;
+  const ocupados = await db.collection("ocupados")
+    .orderBy(admin.firestore.FieldPath.documentId())
+    .startAt(String(limiar))
+    .endAt(String(fimJanela))
+    .get();
+  const bloqueados = new Set(ocupados.docs.map(doc => doc.id));
+  const horarios = [];
+  for (let d = 0; d <= 14; d++) {
+    const data = new Date(Date.UTC(hoje.year, hoje.month - 1, hoje.day + d));
+    if (!cfg.diasSemana.includes(data.getUTCDay())) continue;
+    for (let minuto = primeira; minuto + passo <= ultima; minuto += passo) {
+      const inicioMs = instanteHorarioLocal(data.getUTCFullYear(), data.getUTCMonth() + 1,
+        data.getUTCDate(), Math.floor(minuto / 60), minuto % 60);
+      // Impede horários inválidos durante eventuais transições de fuso.
+      const local = horarioLocal(new Date(inicioMs));
+      if (local.dia !== data.getUTCDay() || local.minutos !== minuto) continue;
+      if (inicioMs > agora + 30 * 60000 && inicioMs <= fimJanela &&
+          !bloqueados.has(String(inicioMs))) {
+        horarios.push(inicioMs);
+      }
+    }
+  }
+  return { horarios, fuso: ZONA };
+});
