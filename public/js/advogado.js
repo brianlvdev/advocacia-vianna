@@ -2,7 +2,7 @@ import { exigirPapel } from './guard.js';
 import { auth, db, storage } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { doc, collection, getDocs, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { query, where, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
 const agendamentos = await getDocs(collection(db, 'agendamentos'));
 
@@ -142,4 +142,108 @@ document.getElementById('form-perfil').addEventListener('submit', async (evento)
     console.error(erro);
     aviso.textContent = 'Erro ao salvar. Tente novamente.';
   }
+});
+const listaCasos = document.getElementById('lista-casos');
+
+function botao(texto, acao) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = texto;
+  b.addEventListener('click', async () => {
+    await acao();
+    carregarCasos();
+  });
+  return b;
+}
+
+async function carregarCasos() {
+  listaCasos.replaceChildren();
+
+  const usuarios = await getDocs(query(collection(db, 'users'), where('role', '==', 'estagiario')));
+  const estagiarios = usuarios.docs.map((d) => ({ uid: d.id, ...d.data() }));
+
+  const todos = await getDocs(collection(db, 'casos'));
+  const casos = todos.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+
+  for (const c of casos) {
+    const card = document.createElement('article');
+    card.className = 'caso';
+
+    const titulo = document.createElement('h3');
+    titulo.textContent = c.clienteNome + ' - ' + c.assunto;
+    const etiqueta = document.createElement('span');
+    etiqueta.className = 'etiqueta';
+    etiqueta.textContent = c.status;
+    const texto = document.createElement('p');
+    texto.textContent = c.resumo;
+    card.append(titulo, etiqueta, texto);
+
+    for (const arq of c.arquivos || []) {
+      const link = document.createElement('a');
+      link.href = await getDownloadURL(ref(storage, arq.caminho));
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = arq.nome;
+      card.append(document.createElement('br'), link);
+    }
+
+    const casoRef = doc(db, 'casos', c.id);
+    const acoes = document.createElement('div');
+    acoes.className = 'linha';
+    acoes.append(
+      botao('Aceitar', () => updateDoc(casoRef, { status: 'aceito' })),
+      botao('Recusar', () => updateDoc(casoRef, { status: 'recusado' }))
+    );
+
+    if (estagiarios.length) {
+      const seletor = document.createElement('select');
+      estagiarios.forEach((e) => {
+        const op = document.createElement('option');
+        op.value = e.uid;
+        op.textContent = e.nome;
+        seletor.appendChild(op);
+      });
+      acoes.append(
+        seletor,
+        botao('Passar ao estagiário', () => updateDoc(casoRef, {
+          liberadoParaEstagiario: true,
+          estagiarioUid: seletor.value,
+          status: 'com-estagiario'
+        }))
+      );
+    }
+
+    card.appendChild(acoes);
+    listaCasos.appendChild(card);
+  }
+}
+
+carregarCasos();
+async function carregarEquipe() {
+  const area = document.getElementById('lista-clientes');
+  area.replaceChildren();
+
+  const clientes = await getDocs(query(collection(db, 'users'), where('role', '==', 'cliente')));
+  clientes.docs.forEach((d) => {
+    const linha = document.createElement('div');
+    linha.className = 'linha';
+    const nome = document.createElement('span');
+    nome.textContent = d.data().nome + ' (' + d.data().email + ')';
+    linha.append(nome, botao('Tornar estagiário', async () => {
+      await updateDoc(doc(db, 'users', d.id), { role: 'estagiario' });
+      carregarEquipe();
+    }));
+    area.appendChild(linha);
+  });
+}
+
+carregarEquipe();
+await addDoc(collection(db, 'tarefas'), {
+  titulo,
+  data,
+  estagiarioUid,
+  concluida: false,
+  criadoEm: serverTimestamp()
 });

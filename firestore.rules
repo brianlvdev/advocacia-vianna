@@ -32,7 +32,8 @@ service cloud.firestore {
                     resource.data.clienteUid == request.auth.uid
                     || ehAdmin()
                     || (ehEstagiario() && resource.data.liberadoParaEstagiario == true)
-                  );
+                                      || (ehEstagiario() && resource.data.liberadoParaEstagiario == true
+                        && resource.data.estagiarioUid == request.auth.uid));
       allow update: if ehAdmin();
     }
         match /config/{documento} {
@@ -52,6 +53,15 @@ service cloud.firestore {
                     && request.resource.data.status == 'pendente';
       allow read: if logado() && (resource.data.clienteUid == request.auth.uid || ehAdmin());
       allow update, delete: if ehAdmin();
+    }
+    match /tarefas/{id} {
+      allow read: if ehAdmin()
+                  || (ehEstagiario() && resource.data.estagiarioUid == request.auth.uid);
+      allow create, delete: if ehAdmin();
+      allow update: if ehAdmin()
+                    || (ehEstagiario()
+                        && resource.data.estagiarioUid == request.auth.uid
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['concluida']));
     }
   }
 }
