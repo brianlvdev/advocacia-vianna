@@ -17,7 +17,11 @@ try {
     if (d.fotoUrl) {
       try {
         const url = new URL(d.fotoUrl);
-        if (url.protocol === 'https:') document.getElementById('foto-advogada').src = url.href;
+        if (url.protocol === 'https:') {
+          document.getElementById('foto-advogada').src = url.href;
+          const capa = document.getElementById('foto-advogada-capa');
+          if (capa) capa.src = url.href;
+        }
       } catch (erro) { console.warn('Foto inválida.'); }
     }
     if (d.endereco) document.getElementById('item-endereco').textContent = d.endereco;
