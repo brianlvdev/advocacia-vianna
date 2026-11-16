@@ -1,98 +1,68 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Advocacia Vianna</title>
-    <meta name="description" content="Advocacia Vianna: Atendimento jurídico com antencao e clareza.">
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Advocacia Vianna. Atendimento jurídico individualizado, responsável e com clareza.">
+  <meta name="theme-color" content="#13253a">
+  <title>Advocacia Vianna | Atendimento jurídico</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
-
-    <header class="topo">
-        <a href="#inicio" class="marca"><img src="img/logo.png" alt="Logo Advocacia Vianna"></a>
-        <nav>
-            <a href="#sobre">Sobre</a>
-            <a href="#areas">Áreas de atuação</a>
-            <a href="#contato">Contato</a>
-            <a id='link-painel' href='#' hidden>Meu painel</a>
-            <button id="btn-login" class="btn">Entrar com Google</button>
-
-        </nav>
-    </header>
-    <main>
-        <section id="inicio" class="hero">
-            <h1>Advocacia Vianna</h1>
-            <p>Atendimento jurídico com antencao e clareza.</p>
-            <a class="btn" href="#contato">Fale Comigo</a>
-        </section>
-
-        <section id="sobre">
-            <h2>Sobre mim</h2>
-            <div class="sobre-grid">
-                <img id="foto-advogada" src="img/foto-advogada.jpeg" alt="Foto da Advogada">
-                <p id="texto-sobre">" adicione seu texto mae, da pra editar isso pelo painel depois👍 "</p>
-
-            </div>
-        </section>
-
-        <section id="areas">
-            <h2>Áreas de atuação</h2>
-            <div class="cards">
-                <article class="card">
-                    <h3>Direito Penal</h3>
-                    <p>breve descricao </p>
-                </article>
-                <article class="card">
-                    <h3>Direito de Familia</h3>
-                    <p>breve descricao </p>
-                </article>
-                <article class="card">
-                    <h3>Direito Civil</h3>
-                    <p>breve descricao </p>
-                </article>
-                <article class="card">
-                    <h3>Direito Penal Economicos</h3>
-                    <p>breve descricao </p>
-                </article>
-                <article class="card">
-                    <h3>teste</h3>
-                    <p>test </p>
-                </article>
-            </div>
-            <!-- <div id='lista-areas' class='cards'></div> -->
-        </section>
-        
-        <section id='numeros'>
-            <h2>Atuação em números</h2>
-            <div id='lista-stats' class='cards'></div>
-            <p><a id='link-jusbrasil' href='#' target='_blank' rel='noopener' hidden>Ver perfil completo no
-                    JusBrasil</a></p>
-
-        </section>
-        <section id="contato">
-            <h2>Contato</h2>
-            <ul class="contatos">
-                <li id='item-endereco'></li>
-                <li><a id="link-whats" class="btn" href="#" target="_blank" rel="noopener">Faca contato comigo pelo
-                        WhatsApp</a></li>
-                <li><a id='link-email' class="btn" href="mailto:LudmilaVianna@yahoo.com.br">Email</a></li>
-                <li><a id='link-instagram' class="btn" href="https://www.instagram.com/dra.ludmila.vianna/"
-                        target="_blank" rel="noopener">Instagram</a></li>
-            </ul>
-        </section>
-
-    </main>
-    <footer class="rodape">
-        <p>© Advocacia Vianna. Todos os direitos reservados.</p>
-    </footer>
-
-    <script src="js/main.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type='module' src='js/perfil-publico.js'></script>
-
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <a class="marca" href="#inicio"><img src="img/logo.png" alt="Advocacia Vianna"></a>
+    <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Abrir menu" aria-controls="menu-principal" aria-expanded="false">☰</button>
+    <nav id="menu-principal" aria-label="Navegação principal">
+      <a href="#sobre">O escritório</a><a href="#areas">Atuação</a><a href="#contato">Contato</a>
+      <a id="link-painel" href="cliente.html" hidden>Meu painel</a>
+      <button id="btn-login" type="button" class="btn btn-nav">Entrar com Google</button>
+    </nav>
+  </header>
+  <main id="conteudo">
+    <section id="inicio" class="hero">
+      <div class="hero-inner">
+        <p class="sobretitulo">ADVOCACIA VIANNA</p>
+        <h1>Atendimento jurídico com atenção, seriedade e clareza.</h1>
+        <p class="hero-descricao">Orientação individualizada para compreender sua situação e avaliar os caminhos jurídicos cabíveis, respeitando o sigilo profissional.</p>
+        <div class="hero-acoes"><a href="#contato" class="btn btn-claro">Entre em contato</a><a href="#sobre" class="link-discreto">Conheça o escritório ↗</a></div>
+      </div>
+      <div class="hero-detalhe" aria-hidden="true">Ética · Confiança · Compromisso</div>
+    </section>
+    <section id="sobre" class="sobre-secao">
+      <div class="sobre-grid">
+        <div class="foto-moldura"><img id="foto-advogada" src="img/foto-advogada.jpeg" alt="Retrato profissional da advogada responsável"></div>
+        <div class="sobre-conteudo">
+          <p class="sobretitulo">O ESCRITÓRIO</p>
+          <h2>Uma advocacia próxima, transparente e responsável.</h2>
+          <p id="texto-sobre">O escritório Advocacia Vianna busca oferecer atendimento jurídico individualizado, com escuta atenta, análise criteriosa e comunicação clara em cada etapa.</p>
+          <a class="link-texto" href="#contato">Converse com o escritório ↗</a>
+        </div>
+      </div>
+    </section>
+    <section id="areas" class="areas-secao">
+      <div class="secao-cabecalho"><p class="sobretitulo">ÁREAS DE ATUAÇÃO</p><h2>Atuação jurídica</h2><p>A viabilidade de cada demanda depende de análise individual.</p></div>
+      <div id="lista-areas" class="cards">
+        <article class="card"><span class="card-numero">01</span><h3>Direito Civil</h3><p>Orientação em relações e conflitos de natureza civil.</p></article>
+        <article class="card"><span class="card-numero">02</span><h3>Direito de Família</h3><p>Atendimento jurídico em questões familiares.</p></article>
+        <article class="card"><span class="card-numero">03</span><h3>Direito Penal</h3><p>Análise e acompanhamento de demandas de natureza penal.</p></article>
+        <article class="card"><span class="card-numero">04</span><h3>Direito Penal Econômico</h3><p>Orientação jurídica sobre matérias de direito penal econômico.</p></article>
+      </div>
+    </section>
+    <section id="numeros" class="informacoes-secao" hidden><p class="sobretitulo">INFORMAÇÕES INSTITUCIONAIS</p><h2>O escritório</h2><div id="lista-stats" class="cards"></div><p><a id="link-jusbrasil" href="#" target="_blank" rel="noopener noreferrer" hidden>Perfil profissional no Jusbrasil ↗</a></p></section>
+    <section id="contato" class="contato-secao">
+      <div class="contato-grid"><div>
+        <p class="sobretitulo">CONTATO</p><h2>Estamos à disposição para ouvir você.</h2>
+        <p>Entre em contato para informações sobre atendimento. Não encaminhe documentos sensíveis por canais públicos.</p><p id="item-endereco"></p>
+      </div><div class="contato-acoes">
+        <a id="link-whats" class="btn btn-claro" target="_blank" rel="noopener noreferrer" href="#" hidden>Conversar pelo WhatsApp ↗</a>
+        <a id="link-email" class="btn btn-contorno" href="#" hidden>Enviar e-mail ↗</a>
+        <a id="link-instagram" class="link-discreto" href="#" target="_blank" rel="noopener noreferrer" hidden>Instagram ↗</a>
+      </div></div>
+    </section>
+  </main>
+  <footer class="rodape"><div><strong>Advocacia Vianna</strong><p>Atendimento jurídico responsável.</p></div><div><a href="privacidade.html">Privacidade</a></div><p>© <span id="ano"></span> Advocacia Vianna. Conteúdo informativo, sem promessa de resultados.</p></footer>
+  <script src="js/main.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/perfil-publico.js"></script>
 </body>
-
 </html>

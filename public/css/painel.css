@@ -1,15 +1,1 @@
-.painel { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
-.painel h1 { color: var(--cor-principal); margin-bottom: 16px; }
-.painel form { display: grid; gap: 14px; }
-.painel label { display: grid; gap: 6px; font-weight: bold; }
-.painel input, .painel textarea, .painel select {
-  padding: 10px; border: 1px solid #ccc; border-radius: 6px; font: inherit;
-}
-.painel textarea { min-height: 120px; }
-.painel fieldset { border: 1px solid #ddd; border-radius: 8px; padding: 16px; display: grid; gap: 10px; }
-.linha { display: flex; gap: 8px; flex-wrap: wrap; }
-.linha input { flex: 1; min-width: 140px; }
-.aviso { color: green; }
-.lista-casos { display: grid; gap: 14px; margin-top: 24px; }
-.caso { background: #fff; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-.etiqueta { display: inline-block; padding: 2px 10px; border-radius: 12px; background: #eee; font-size: .85rem; }
+.painel{max-width:1160px;margin:0 auto;padding:44px 24px 90px}.painel h1{color:var(--azul);font-size:clamp(2rem,4vw,3rem);margin:8px 0 5px}.painel>p:not(.sobretitulo){color:var(--muted)}.painel-secao{border:1px solid var(--borda);background:#fff;padding:clamp(20px,3vw,36px);margin:26px 0;box-shadow:0 8px 35px #13253a08}.painel-secao h2{font-size:clamp(1.5rem,2.5vw,2rem);margin:0 0 15px}.painel form{display:grid;gap:18px}.painel label{display:grid;gap:6px;font-weight:600;font-size:.92rem}.painel input,.painel textarea,.painel select{width:100%;background:#fff;padding:11px 12px;border:1px solid #cbd1d5;border-radius:4px;color:var(--texto)}.painel input[type=checkbox]{width:auto;padding:0;accent-color:var(--azul)}.painel textarea{min-height:120px;resize:vertical}.painel fieldset{border:1px solid var(--borda);border-radius:4px;padding:18px;display:grid;gap:14px}.painel legend{color:var(--azul);font-weight:700;padding:0 8px}.painel form .btn{justify-self:start}.grid-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.linha{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.linha input:not([type=checkbox]){flex:1;min-width:160px}.linha label{display:inline-flex;flex-direction:row;gap:6px}.linhas-dinamicas{display:grid;gap:14px}.linhas-dinamicas .linha{padding:12px;background:#f7f7f5;border:1px solid var(--borda)}.aviso{color:#285a4d;font-weight:600;margin:10px 0}.lista-casos{display:grid;gap:14px;margin:20px 0}.caso{display:grid;gap:9px;background:#f9f9f7;padding:20px;border:1px solid var(--borda);border-left:3px solid var(--dourado)}.caso h3{margin:0;font-size:1.24rem}.caso p{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}.caso a{display:inline-block;overflow-wrap:anywhere;color:#264d72}.etiqueta{width:max-content;background:#e9e5dc;color:#423c30;font-size:.75rem;padding:3px 10px;border-radius:20px;text-transform:uppercase}.btn-secundario{background:#fff;border-color:#a0aab4;color:var(--azul);font-size:.85rem;padding:9px 14px}.btn-horario{min-width:80px}.horarios-linha{margin-bottom:24px}.consentimento{display:flex!important;flex-direction:row;align-items:flex-start;gap:12px!important}.consentimento input{margin-top:7px}.equipe-linha{padding:13px;border-bottom:1px solid var(--borda)}.tarefa-linha{padding:8px;display:flex!important;flex-direction:row;align-items:center}@media(max-width:800px){.grid-form{grid-template-columns:1fr}}

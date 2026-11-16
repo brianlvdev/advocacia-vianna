@@ -1,117 +1,169 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage } from './firebase-config.js';
+import { auth, db, storage, functions } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-  collection, doc, setDoc, getDocs, query, where, serverTimestamp
+  collection, doc, setDoc, updateDoc, getDocs, query, where, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+const cancelarReuniao = httpsCallable(functions, 'cancelarMeuAgendamento');
 
 const { usuario } = await exigirPapel(['cliente']);
-
-document.getElementById('boas-vindas').textContent = 'Olá, ' + usuario.displayName;
-document.getElementById('btn-sair')?.addEventListener('click', async () => {
+document.getElementById('boas-vindas').textContent =
+  'Olá, ' + (usuario.displayName || 'bem-vindo(a)');
+document.getElementById('btn-sair').addEventListener('click', async () => {
   await signOut(auth);
-  window.location.href = 'index.html';
+  window.location.replace('index.html');
 });
 
-const TIPOS = ['application/pdf', 'text/plain'];
+const TIPOS = new Set(['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'image/webp']);
 const LIMITE = 10 * 1024 * 1024;
+const aviso = document.getElementById('aviso');
+const formulario = document.getElementById('form-caso');
+const enviar = formulario.querySelector('button[type=submit]');
 
-function tipoPermitido(arquivo) {
-  return arquivo.type.startsWith('image/') || TIPOS.includes(arquivo.type);
-}
-
-document.getElementById('form-caso').addEventListener('submit', async (evento) => {
+formulario.addEventListener('submit', async (evento) => {
   evento.preventDefault();
-  const aviso = document.getElementById('aviso');
   const arquivos = [...document.getElementById('arquivos').files];
-
-  for (const a of arquivos) {
-    if (!tipoPermitido(a) || a.size > LIMITE) {
-      aviso.textContent = 'Arquivo inválido: ' + a.name + ' (tipo não aceito ou maior que 10 MB).';
-      return;
-    }
+  const resumo = document.getElementById('resumo').value.trim();
+  if (resumo.length < 10 || resumo.length > 8000) {
+    aviso.textContent = 'Descreva seu caso entre 10 e 8.000 caracteres.';
+    return;
   }
-
-  aviso.textContent = 'Enviando...';
-
+  if (arquivos.length > 8 || arquivos.some(a => !TIPOS.has(a.type) || a.size > LIMITE)) {
+    aviso.textContent = 'Envie até 8 arquivos PDF, TXT, JPEG, PNG ou WEBP com até 10 MB cada.';
+    return;
+  }
+  enviar.disabled = true;
+  aviso.textContent = 'Registrando seu caso...';
   try {
     const casoRef = doc(collection(db, 'casos'));
-    const enviados = [];
-
-    for (const a of arquivos) {
-      const caminho = 'casos/' + usuario.uid + '/' + casoRef.id + '/' + a.name;
-      await uploadBytes(ref(storage, caminho), a);
-      enviados.push({ nome: a.name, caminho, tipo: a.type, tamanho: a.size });
-    }
-    const perfil = await getDoc(doc(db, 'site', 'perfil'));
-    if (perfil.exists() && perfil.data().agendaUrl) {
-      const botao = document.getElementById('btn-agendar');
-      botao.href = perfil.data().agendaUrl;
-      botao.target = '_blank';
-      botao.rel = 'noopener';
-    }
     await setDoc(casoRef, {
       clienteUid: usuario.uid,
-      clienteNome: usuario.displayName,
+      clienteNome: (usuario.displayName || 'Cliente').slice(0, 120),
       clienteEmail: usuario.email,
       assunto: document.getElementById('assunto').value,
-      resumo: document.getElementById('resumo').value.trim(),
-      arquivos: enviados,
-      status: 'novo',
+      resumo,
+      arquivos: [],
+      status: 'uploading',
       liberadoParaEstagiario: false,
       criadoEm: serverTimestamp()
     });
-
-    document.getElementById('form-caso').reset();
-    aviso.textContent = 'Enviado! A advogada vai analisar o seu caso.';
-    carregarCasos();
+    const enviados = [];
+    for (const arquivo of arquivos) {
+      const id = crypto.randomUUID();
+      const caminho = 'casos/' + usuario.uid + '/' + casoRef.id + '/' + id;
+      aviso.textContent = 'Enviando ' + arquivo.name + '...';
+      await uploadBytes(ref(storage, caminho), arquivo, { contentType: arquivo.type });
+      enviados.push({
+        nome: arquivo.name.slice(0, 180),
+        caminho, tipo: arquivo.type, tamanho: arquivo.size
+      });
+    }
+    await updateDoc(casoRef, { arquivos: enviados, status: 'novo' });
+    formulario.reset();
+    aviso.textContent = 'Caso enviado. O escritório analisará suas informações.';
+    await carregarCasos();
   } catch (erro) {
     console.error(erro);
-    aviso.textContent = 'Erro ao enviar. Tente novamente.';
+    aviso.textContent = 'Falha no envio. Se o registro foi iniciado, entre em contato com o escritório antes de reenviar.';
+  } finally {
+    enviar.disabled = false;
   }
 });
-query(collection(db, 'agendamentos'), where('clienteUid', '==', usuario.uid))
+
 async function carregarCasos() {
   const lista = document.getElementById('lista-casos');
   lista.replaceChildren();
-
-  const q = query(collection(db, 'casos'), where('clienteUid', '==', usuario.uid));
-  const resultado = await getDocs(q);
-
-  const casos = resultado.docs
-    .map((d) => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
-
-  for (const c of casos) {
-    const card = document.createElement('article');
-    card.className = 'caso';
-
-    const titulo = document.createElement('h3');
-    titulo.textContent = c.assunto;
-
-    const etiqueta = document.createElement('span');
-    etiqueta.className = 'etiqueta';
-    etiqueta.textContent = c.status;
-
-    const texto = document.createElement('p');
-    texto.textContent = c.resumo;
-
-    card.append(titulo, etiqueta, texto);
-
-    for (const arq of c.arquivos || []) {
-      const url = await getDownloadURL(ref(storage, arq.caminho));
-      const link = document.createElement('a');
-      link.href = url;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = arq.nome;
-      card.append(document.createElement('br'), link);
+  try {
+    const resultado = await getDocs(query(collection(db, 'casos'), where('clienteUid', '==', usuario.uid)));
+    const casos = resultado.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.criadoEm?.seconds || 0) - (a.criadoEm?.seconds || 0));
+    if (!casos.length) lista.textContent = 'Você ainda não enviou nenhum caso.';
+    for (const caso of casos) {
+      const card = document.createElement('article');
+      card.className = 'caso';
+      const titulo = document.createElement('h3');
+      titulo.textContent = caso.assunto;
+      const etiqueta = document.createElement('span');
+      etiqueta.className = 'etiqueta';
+      etiqueta.textContent = caso.status === 'uploading' ? 'Envio incompleto' : caso.status;
+      const texto = document.createElement('p');
+      texto.textContent = caso.resumo;
+      card.append(titulo, etiqueta, texto);
+      for (const arq of caso.arquivos || []) {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = arq.nome;
+        link.addEventListener('click', async e => {
+          e.preventDefault();
+          try {
+            window.open(await getDownloadURL(ref(storage, arq.caminho)), '_blank', 'noopener');
+          } catch (erro) {
+            console.error(erro);
+            alert('Não foi possível abrir o documento.');
+          }
+        });
+        card.append(link);
+      }
+      lista.appendChild(card);
     }
-
-    lista.appendChild(card);
+  } catch (erro) {
+    console.error(erro);
+    lista.textContent = 'Não foi possível carregar os casos.';
   }
 }
 
-carregarCasos();
+async function carregarReunioes() {
+  const lista = document.getElementById('lista-reunioes');
+  try {
+    const resultado = await getDocs(query(collection(db, 'agendamentos'),
+      where('clienteUid', '==', usuario.uid)));
+    const reunioes = resultado.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => a.inicio.localeCompare(b.inicio));
+    lista.replaceChildren();
+    if (!reunioes.length) lista.textContent = 'Nenhuma reunião solicitada.';
+    reunioes.forEach(a => {
+      const card = document.createElement('article');
+      card.className = 'caso';
+      const h = document.createElement('h3');
+      h.textContent = new Date(a.inicio).toLocaleString('pt-BR');
+      const p = document.createElement('p');
+      p.textContent = 'Situação: ' + a.status;
+      card.append(h, p);
+      if (a.status === 'pendente') {
+        const cancelar = document.createElement('button');
+        cancelar.type = 'button';
+        cancelar.className = 'btn btn-secundario';
+        cancelar.textContent = 'Cancelar solicitação';
+        cancelar.addEventListener('click', async () => {
+          if (!confirm('Cancelar esta solicitação de reunião?')) return;
+          cancelar.disabled = true;
+          try {
+            await cancelarReuniao({ id: a.id });
+            await carregarReunioes();
+          } catch (erro) {
+            console.error(erro);
+            alert('Não foi possível cancelar. Verifique se a reunião ainda está pendente.');
+            cancelar.disabled = false;
+          }
+        });
+        card.append(cancelar);
+      }
+      if (a.status === 'confirmado' && a.meetUrl) {
+        const link = document.createElement('a');
+        link.href = a.meetUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Acessar reunião';
+        card.append(link);
+      }
+      lista.append(card);
+    });
+  } catch (erro) {
+    console.error(erro);
+    lista.textContent = 'Não foi possível consultar as reuniões.';
+  }
+}
+
+await Promise.all([carregarCasos(), carregarReunioes()]);
