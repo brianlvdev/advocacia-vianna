@@ -190,3 +190,17 @@ section { scroll-margin-top: 105px; }
   html { scroll-behavior:auto; }
   *,*::before,*::after { transition-duration:.01ms !important; animation-duration:.01ms !important; }
 }
+/* Páginas internas não têm menu recolhível: mantenha suas ações visíveis. */
+@media (max-width:760px) {
+  .topo:not(:has(.menu-toggle)) nav {
+    display:flex; position:static; flex-direction:row; align-items:center;
+    justify-content:flex-end; flex-wrap:wrap; gap:10px; padding:0;
+    border:0; background:transparent;
+  }
+  .topo:not(:has(.menu-toggle)) nav a { font-size:.8rem; }
+  .topo:not(:has(.menu-toggle)) nav .btn { min-height:38px; padding:7px 12px; }
+}
+@media (max-width:390px) {
+  .topo:not(:has(.menu-toggle)) { gap:10px; padding:8px 12px; }
+  .topo:not(:has(.menu-toggle)) .marca img { max-width:118px; height:43px; }
+}
