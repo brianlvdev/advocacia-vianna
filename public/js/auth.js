@@ -1,55 +1,55 @@
 import { auth, db } from './firebase-config.js';
 import {
-    GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+  GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {
-    doc, getDoc, setDoc, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js'
+  doc, getDoc, setDoc, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 const botao = document.getElementById('btn-login');
+const link = document.getElementById('link-painel');
 const provedor = new GoogleAuthProvider();
-
 botao.addEventListener('click', async () => {
-    if (auth.currentUser) {
-        await signOut(auth);
-        return;
-    }
-    try {
-        await signInWithPopup(auth, provedor);
-    } catch (erro) {
-        console.error(erro);
-        alert('Não foi possível entrar. Tente novamente.');
-    }
+  botao.disabled = true;
+  try {
+    if (auth.currentUser) await signOut(auth);
+    else await signInWithPopup(auth, provedor);
+  } catch (erro) {
+    console.error(erro);
+    alert('Não foi possível concluir a autenticação. Tente novamente.');
+  } finally {
+    botao.disabled = false;
+  }
 });
 
 onAuthStateChanged(auth, async (usuario) => {
-    const link = document.getElementById('link-painel');
-
-    if (!usuario) {
-        botao.textContent = 'Entrar com Google';
-        link.hidden = true;
-        return;
-    }
-
-    botao.textContent = 'Sair (' + usuario.displayName.split(' ')[0] + ')';
-
-    // Referência ao documento do usuário
+  link.hidden = true;
+  if (!usuario) {
+    botao.textContent = 'Entrar com Google';
+    return;
+  }
+  botao.textContent = 'Sair (' + (usuario.displayName || 'Minha conta').split(' ')[0] + ')';
+  try {
     const ref = doc(db, 'users', usuario.uid);
-    const snap = await getDoc(ref);
-
-    // Se for novo, cria o perfil
+    let snap = await getDoc(ref);
     if (!snap.exists()) {
-        await setDoc(ref, {
-            nome: usuario.displayName,
-            email: usuario.email,
-            role: 'cliente',
-            criadoEm: serverTimestamp()
-        });
+      await setDoc(ref, {
+        nome: usuario.displayName || 'Cliente',
+        email: usuario.email,
+        role: 'cliente',
+        criadoEm: serverTimestamp()
+      });
+      snap = await getDoc(ref);
     }
-
-    // link do painel baseado na role
-  const dados = (await getDoc(ref)).data();
-  const paginas = { admin: 'advogado.html', estagiario: 'estagiario.html', cliente: 'cliente.html' };
-  link.href = paginas[dados.role];
-  link.hidden = false;
+    const paginas = {
+      admin: 'advogado.html', estagiario: 'estagiario.html', cliente: 'cliente.html'
+    };
+    const destino = paginas[snap.data()?.role];
+    if (destino) {
+      link.href = destino;
+      link.hidden = false;
+    }
+  } catch (erro) {
+    console.error('Não foi possível carregar o perfil.', erro);
+  }
 });
