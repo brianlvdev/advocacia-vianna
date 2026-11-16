@@ -1,67 +1,102 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
+    function logado() { return request.auth != null; }
     function papel() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
-    function logado() { return request.auth != null; }
-    function ehAdmin() { return logado() && papel() == 'admin'; }
-    function ehEstagiario() { return logado() && papel() == 'estagiario'; }
+    function admin() { return logado() && papel() == 'admin'; }
+    function estagiario() { return logado() && papel() == 'estagiario'; }
+    function dono(uid) { return logado() && request.auth.uid == uid; }
 
     match /users/{uid} {
-      allow read: if logado() && (request.auth.uid == uid || ehAdmin());
-      allow create: if logado()
-                    && request.auth.uid == uid
-                    && request.resource.data.role == 'cliente';
-      allow update: if ehAdmin();
+      allow get: if dono(uid) || admin();
+      allow list: if admin();
+      allow create: if dono(uid)
+        && request.resource.data.keys().hasOnly(['nome', 'email', 'role', 'criadoEm'])
+        && request.resource.data.role == 'cliente'
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() <= 120
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.criadoEm == request.time;
+      allow update: if admin();
+      allow delete: if false;
     }
 
-    // Conteúdo público do site (perfil, áreas, estatísticas)
     match /site/{documento} {
       allow read: if true;
-      allow write: if ehAdmin();
+      allow write: if admin();
     }
 
     match /casos/{casoId} {
       allow create: if logado()
-                    && request.resource.data.clienteUid == request.auth.uid
-                    && request.resource.data.status == 'novo'
-                    && request.resource.data.liberadoParaEstagiario == false;
+        && request.resource.data.keys().hasOnly([
+          'clienteUid', 'clienteNome', 'clienteEmail', 'assunto', 'resumo',
+          'arquivos', 'status', 'liberadoParaEstagiario', 'criadoEm'
+        ])
+        && request.resource.data.clienteUid == request.auth.uid
+        && request.resource.data.clienteNome is string
+        && request.resource.data.clienteNome.size() <= 120
+        && request.resource.data.clienteEmail == request.auth.token.email
+        && request.resource.data.assunto is string
+        && request.resource.data.assunto.size() <= 120
+        && request.resource.data.resumo is string
+        && request.resource.data.resumo.size() >= 10
+        && request.resource.data.resumo.size() <= 8000
+        && request.resource.data.arquivos == []
+        && request.resource.data.status == 'uploading'
+        && request.resource.data.liberadoParaEstagiario == false
+        && request.resource.data.criadoEm == request.time;
       allow read: if logado() && (
-                    resource.data.clienteUid == request.auth.uid
-                    || ehAdmin()
-                    || (ehEstagiario() && resource.data.liberadoParaEstagiario == true)
-                                      || (ehEstagiario() && resource.data.liberadoParaEstagiario == true
-                        && resource.data.estagiarioUid == request.auth.uid));
-      allow update: if ehAdmin();
-    }
-        match /config/{documento} {
-      allow read: if logado();
-      allow write: if ehAdmin();
+        resource.data.clienteUid == request.auth.uid
+        || admin()
+        || (estagiario()
+            && resource.data.liberadoParaEstagiario == true
+            && resource.data.estagiarioUid == request.auth.uid)
+      );
+      allow update: if admin() || (
+        dono(resource.data.clienteUid)
+        && resource.data.status == 'uploading'
+        && request.resource.data.status == 'novo'
+        && request.resource.data.arquivos is list
+        && request.resource.data.arquivos.size() <= 8
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'arquivos'])
+      );
+      allow delete: if admin();
     }
 
+    match /config/{documento} {
+      allow read: if logado();
+      allow write: if admin();
+    }
+
+    // Somente Cloud Functions (Admin SDK) podem registrar/reservar horários.
     match /ocupados/{slot} {
       allow read: if logado();
-      allow create: if logado() && request.resource.data.keys().hasOnly(['inicio']);
-      allow update, delete: if ehAdmin();
+      allow write: if false;
+    }
+    match /agendamentos/{id} {
+      allow read: if logado() && (
+        resource.data.clienteUid == request.auth.uid || admin()
+      );
+      allow write: if false;
+    }
+    match /controlesAgenda/{uid} {
+      allow read, write: if false;
     }
 
-    match /agendamentos/{id} {
-      allow create: if logado()
-                    && request.resource.data.clienteUid == request.auth.uid
-                    && request.resource.data.status == 'pendente';
-      allow read: if logado() && (resource.data.clienteUid == request.auth.uid || ehAdmin());
-      allow update, delete: if ehAdmin();
-    }
     match /tarefas/{id} {
-      allow read: if ehAdmin()
-                  || (ehEstagiario() && resource.data.estagiarioUid == request.auth.uid);
-      allow create, delete: if ehAdmin();
-      allow update: if ehAdmin()
-                    || (ehEstagiario()
-                        && resource.data.estagiarioUid == request.auth.uid
-                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['concluida']));
+      allow read: if admin() || (
+        estagiario() && resource.data.estagiarioUid == request.auth.uid
+      );
+      allow create, delete: if admin();
+      allow update: if admin() || (
+        estagiario()
+        && resource.data.estagiarioUid == request.auth.uid
+        && request.resource.data.concluida is bool
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['concluida'])
+      );
     }
   }
 }
