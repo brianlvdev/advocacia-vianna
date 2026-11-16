@@ -73,8 +73,8 @@ service cloud.firestore {
 
     // Somente Cloud Functions (Admin SDK) podem registrar/reservar horários.
     match /ocupados/{slot} {
-      allow read: if logado();
-      allow write: if false;
+      // A consulta de horários é feita exclusivamente pela Cloud Function.
+      allow read, write: if false;
     }
     match /agendamentos/{id} {
       allow read: if logado() && (
