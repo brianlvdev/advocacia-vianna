@@ -97,7 +97,7 @@ exports.criarAgendamento = onCall({
 
     const inicio = new Date(inicioMs);
     const fim = new Date(inicioMs + duracao * 60000);
-    tx.create(reservaRef, { inicio: inicio.toISOString(), clienteUid: uid });
+    tx.create(reservaRef, { inicio: inicio.toISOString() });
     const agendamento = {
       clienteUid: uid,
       clienteNome: String(usuario.get("nome") || "").slice(0, 120),
