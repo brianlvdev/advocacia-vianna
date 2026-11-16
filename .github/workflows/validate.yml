@@ -1,0 +1,25 @@
+name: Verificar codigo do portal
+on:
+  push:
+    branches:
+      - feat/modernizacao-seguranca-20261116
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verificar JavaScript, HTML e configuracao Firebase
+        run: node tests/validate.cjs
+      - name: Instalar dependencias das funcoes
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+      - name: Verificar sintaxe das Cloud Functions
+        working-directory: functions
+        run: npm run lint
