@@ -17,7 +17,7 @@ import {
   collection, doc, getDocs, query, where, updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const { usuario } = await exigirPapel(['estagiario']);
+
 
 document.getElementById('btn-sair').addEventListener('click', async () => {
   await signOut(auth);

@@ -1,9 +1,10 @@
 import { exigirPapel } from './guard.js';
 import { auth, db, storage } from './firebase-config.js';
 import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { doc, collection, getDocs, updateDoc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { query, where, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { doc, collection, getDocs, updateDoc, getDoc, setDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
 
+const { usuario } = await exigirPapel(['admin']);
 const agendamentos = await getDocs(collection(db, 'agendamentos'));
 
 const cores = { confirmado: '#2e7d32', pendente: '#b8975a', cancelado: '#9e9e9e' };
@@ -38,7 +39,7 @@ const calendario = new FullCalendar.Calendar(document.getElementById('calendario
 });
 
 calendario.render();
-const { usuario } = await exigirPapel(['admin']);
+
 
 document.getElementById('boas-vindas').textContent = 'Olá, ' + usuario.displayName;
 document.getElementById('btn-sair').addEventListener('click', async () => {
