@@ -156,3 +156,34 @@ exports.atualizarAgendamento = onCall({
     return { ok: true };
   });
 });
+
+
+// Clientes podem cancelar apenas solicitações ainda pendentes.
+// A transação libera o horário na mesma operação que altera o status.
+exports.cancelarMeuAgendamento = onCall({
+  region: REGIAO, maxInstances: 5, timeoutSeconds: 30
+}, async (req) => {
+  const uid = autenticado(req);
+  await conferirPapel(uid, "cliente");
+  const id = req.data && req.data.id;
+  if (typeof id !== "string" || !/^\d{13}$/.test(id)) {
+    falhar("invalid-argument", "Agendamento inválido.");
+  }
+  const agendaRef = db.collection("agendamentos").doc(id);
+  const ocupadoRef = db.collection("ocupados").doc(id);
+  return db.runTransaction(async (tx) => {
+    const [agenda, ocupado] = await Promise.all([tx.get(agendaRef), tx.get(ocupadoRef)]);
+    if (!agenda.exists || agenda.get("clienteUid") !== uid) {
+      falhar("permission-denied", "Agendamento não localizado na sua conta.");
+    }
+    if (agenda.get("status") !== "pendente") {
+      falhar("failed-precondition", "Apenas solicitações pendentes podem ser canceladas.");
+    }
+    tx.update(agendaRef, {
+      status: "cancelado",
+      atualizadoEm: admin.firestore.FieldValue.serverTimestamp()
+    });
+    if (ocupado.exists) tx.delete(ocupadoRef);
+    return { ok: true };
+  });
+});
