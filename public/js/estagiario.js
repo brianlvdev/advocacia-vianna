@@ -1,10 +1,10 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage } from './firebase-config.js';
-import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { ref, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
+import { auth, db, storage } from './backend.js';
+import { signOut } from './backend.js';
+import { ref, abrirDocumento } from './backend.js';
 import {
   collection, doc, getDocs, query, where, updateDoc
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+} from './backend.js';
 
 const { usuario } = await exigirPapel(['estagiario']);
 document.getElementById('boas-vindas').textContent =
@@ -75,8 +75,7 @@ try {
       b.addEventListener('click', async () => {
         b.disabled = true;
         try {
-          const url = await getDownloadURL(ref(storage, documento.caminho));
-          window.open(url, '_blank', 'noopener');
+          await abrirDocumento(ref(storage, documento.caminho));
         } catch (erro) {
           console.error(erro);
           alert('Acesso ao documento negado ou arquivo indisponível.');

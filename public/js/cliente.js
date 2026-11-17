@@ -1,11 +1,11 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage, functions } from './firebase-config.js';
-import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { auth, db, storage, functions } from './backend.js';
+import { signOut } from './backend.js';
 import {
   collection, doc, setDoc, updateDoc, getDocs, query, where, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+} from './backend.js';
+import { ref, uploadBytes, abrirDocumento } from './backend.js';
+import { httpsCallable } from './backend.js';
 const cancelarReuniao = httpsCallable(functions, 'cancelarMeuAgendamento');
 
 const { usuario } = await exigirPapel(['cliente']);
@@ -98,7 +98,7 @@ async function carregarCasos() {
         link.addEventListener('click', async e => {
           e.preventDefault();
           try {
-            window.open(await getDownloadURL(ref(storage, arq.caminho)), '_blank', 'noopener');
+            await abrirDocumento(ref(storage, arq.caminho));
           } catch (erro) {
             console.error(erro);
             alert('Não foi possível abrir o documento.');

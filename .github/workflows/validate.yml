@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feat/modernizacao-seguranca-20261116
+      - codex/migracao-supabase
   pull_request:
     branches:
       - main
@@ -17,6 +18,10 @@ jobs:
           node-version: '20'
       - name: Verificar JavaScript, HTML e configuracao Firebase
         run: node tests/validate.cjs
+      - name: Verificar importacoes dos modulos ativos
+        run: node --experimental-vm-modules tests/modules.cjs
+      - name: Verificar acoes e persistencia dos paineis
+        run: node --experimental-vm-modules tests/panels.cjs
       - name: Instalar dependencias das funcoes
         working-directory: functions
         run: npm install --no-audit --no-fund

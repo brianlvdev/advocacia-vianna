@@ -1,33 +1,28 @@
-import { auth, db } from './firebase-config.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { supabase } from './supabase-config.js';
 
-// Não substitui Security Rules: impede apenas exibição indevida do painel.
-export function exigirPapel(papeisPermitidos) {
-  return new Promise((resolve, reject) => {
-    const cancelar = onAuthStateChanged(auth, async (usuario) => {
-      cancelar();
-      if (!usuario) {
-        window.location.replace('index.html'); // aqui
-        reject(new Error('Autenticação necessária.'));
-        return;
-      }
-      try {
-        const snap = await getDoc(doc(db, 'users', usuario.uid));
-        const papel = snap.exists() ? snap.data().role : null;
-        if (!papeisPermitidos.includes(papel)) {
-          window.location.replace('index.html');
-          reject(new Error('Acesso não autorizado.'));
-          return;
-        }
-        resolve({ usuario, papel });
-      } catch (erro) {
-        window.location.replace('index.html');
-        reject(erro);
-      }
-    }, (erro) => {
+// O banco aplica RLS; esta verificação controla a entrada nos painéis.
+export async function exigirPapel(papeisPermitidos) {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    if (!data.user) {
       window.location.replace('index.html');
-      reject(erro);
-    });
-  });
-} // aq tb
+      throw new Error('Entre na sua conta para acessar o painel.');
+    }
+    const { data: perfil, error: perfilErro } = await supabase.from('perfis')
+      .select('nome,papel').eq('id', data.user.id).single();
+    if (perfilErro) throw perfilErro;
+    if (!perfil || !papeisPermitidos.includes(perfil.papel)) {
+      window.location.replace('index.html');
+      throw new Error('Sua conta não tem permissão para acessar este painel.');
+    }
+    return {
+      usuario: { ...data.user, uid: data.user.id, displayName: perfil.nome || 'Minha conta' },
+      papel: perfil.papel
+    };
+  } catch (erro) {
+    const aviso = document.getElementById('aviso');
+    if (aviso) aviso.textContent = 'Não foi possível abrir o painel. Entre novamente ou tente atualizar a página.';
+    throw erro;
+  }
+}
