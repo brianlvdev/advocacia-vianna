@@ -63,7 +63,19 @@ body:has(.painel) { background: #f3f4f2; }
 .btn-secundario:hover { background:#f0f3f4; }
 .btn-horario { min-width:86px; }
 .horarios-linha { margin:0 0 23px; }
-#horarios h3 { margin:24px 0 12px; font-size:1.25rem; color:var(--azul); text-transform:capitalize; }
+#horarios h3 { margin:0 0 14px; font-size:1.15rem; color:var(--azul); text-transform:capitalize; }
+.agenda-dias { display:flex; flex-wrap:wrap; align-items:flex-start; gap:28px; }
+.agenda-dia { flex:1 1 calc(50% - 28px); min-width:0; padding:20px; background:var(--creme); border-top:3px solid var(--dourado); border-radius:5px; }
+.agenda-lista { display:flex; flex-direction:column; gap:0; }
+.agenda-lista .btn-horario { justify-content:space-between; width:100%; min-height:44px; padding:9px 12px; background:transparent; color:var(--azul); border:0; border-bottom:1px solid var(--borda); border-radius:0; box-shadow:none; }
+.agenda-lista .btn-horario::after { content:'Agendar →'; font-size:.78rem; font-weight:500; color:var(--muted); }
+.agenda-lista .btn-horario:hover { background:var(--dourado-claro); transform:none; }
+.caso-atribuicao { padding:16px; background:var(--creme); border:1px solid var(--borda); border-radius:6px; }
+.caso-atribuicao select { margin-bottom:12px; }
+.caso-atribuicao a { margin-top:10px; }
+.caso .caso-retorno:not(:empty) { color:var(--azul); font-weight:600; padding:12px; border-left:3px solid var(--dourado); background:var(--creme); }
+.etiqueta[data-status=aceito],.etiqueta[data-status=com-estagiario] { background:#dfede5; color:#28583f; }
+.etiqueta[data-status=recusado] { background:#f5e4df; color:#833f32; }
 #calendario { margin-top:22px; }
 .fc { --fc-button-bg-color:var(--azul); --fc-button-border-color:var(--azul); --fc-button-hover-bg-color:var(--azul-claro); --fc-button-hover-border-color:var(--azul-claro); --fc-button-active-bg-color:var(--azul-escuro); --fc-button-active-border-color:var(--azul-escuro); --fc-today-bg-color:#f8f2e6; --fc-border-color:#e3e5e5; font-family:'DM Sans',Arial,sans-serif; }
 .fc .fc-toolbar-title { color:var(--azul); font-family:'Playfair Display',Georgia,serif; font-size:clamp(1.2rem,2vw,1.65rem); }
@@ -82,6 +94,7 @@ body:has(.painel) { background: #f3f4f2; }
   .fc .fc-header-toolbar { flex-wrap:wrap; gap:12px; }
 }
 @media(max-width:600px) {
+  .agenda-dia { flex-basis:100%; padding:16px; }
   .painel { width:calc(100% - 28px); padding:35px 0 70px; }
   .painel-secao { padding:22px 17px; margin:18px 0; }
   .grid-form { grid-template-columns:1fr; }

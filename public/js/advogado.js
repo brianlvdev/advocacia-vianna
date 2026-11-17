@@ -164,7 +164,7 @@ async function carregarEquipe() {
     item.append(nome, botao('Conceder papel de estagiário', async () => {
       if (!confirm('Confirma a autorização de acesso à equipe para esta conta?')) return;
       await updateDoc(doc(db, 'users', p.uid), { role: 'estagiario' });
-      await carregarEquipe(); mensagem('Papel atualizado.');
+      await carregarEquipe(); await carregarCasos(); mensagem('Papel atualizado.');
     })); lista.append(item);
   });
 }
@@ -179,7 +179,12 @@ async function carregarCasos() {
     const h = document.createElement('h3'); h.textContent = (c.clienteNome || 'Cliente') + ' — ' + (c.assunto || 'Caso');
     const p = document.createElement('p'); p.textContent = c.resumo || '';
     const situacao = document.createElement('span'); situacao.className = 'etiqueta';
-    situacao.textContent = c.status === 'uploading' ? 'Envio incompleto' : c.status;
+    const rotulos = { uploading: 'Envio incompleto', novo: 'Aguardando análise', aceito: 'Aceito', recusado: 'Recusado', 'com-estagiario': 'Com estagiário' };
+    const atualizarSituacao = () => {
+      situacao.textContent = rotulos[c.status] || c.status;
+      situacao.dataset.status = c.status;
+    };
+    atualizarSituacao();
     card.append(h, situacao, p);
     for (const a of c.arquivos || []) {
       const b = botao('Abrir: ' + a.nome, async () => {
@@ -189,31 +194,74 @@ async function carregarCasos() {
     }
     if (c.status !== 'uploading') {
       const actions = document.createElement('div'); actions.className = 'linha';
-      actions.append(
-        botao('Aceitar', async () => { await updateDoc(doc(db, 'casos', c.id), { status: 'aceito' }); await carregarCasos(); }),
-        botao('Recusar', async () => { await updateDoc(doc(db, 'casos', c.id), { status: 'recusado', liberadoParaEstagiario: false }); await carregarCasos(); })
-      );
+      const retorno = document.createElement('p'); retorno.className = 'caso-retorno';
+      retorno.setAttribute('role', 'status'); retorno.setAttribute('aria-live', 'polite');
+      const responsavel = document.createElement('p');
+      let salvando = false;
+      async function salvarCaso(dados, texto) {
+        if (salvando) return;
+        salvando = true; sincronizar(); retorno.textContent = 'Salvando alteração...';
+        try {
+          const registro = await updateDoc(doc(db, 'casos', c.id), dados);
+          Object.assign(c, registro);
+          atualizarSituacao(); retorno.textContent = texto;
+        } catch (erro) {
+          console.error('Não foi possível atualizar o caso', erro);
+          retorno.textContent = 'Não foi possível salvar a alteração. Tente novamente.';
+        } finally { salvando = false; sincronizar(); }
+      }
+      // Não recriar a lista: manter o foco, a posição e o resultado junto do caso.
+      function acao(texto, fn) {
+        const b = document.createElement('button'); b.type = 'button';
+        b.className = 'btn btn-secundario'; b.textContent = texto;
+        b.addEventListener('click', fn); return b;
+      }
+      const aceitar = acao('Aceitar', () => salvarCaso({ status: 'aceito', estagiarioUid: null, liberadoParaEstagiario: false }, 'Caso aceito e salvo.'));
+      const recusar = acao('Recusar', () => salvarCaso({ status: 'recusado', estagiarioUid: null, liberadoParaEstagiario: false }, 'Caso recusado e salvo. O acesso da equipe foi removido.'));
+      actions.append(aceitar, recusar);
       const estagiarios = equipe.filter(e => e.role === 'estagiario');
+      const atribuicao = document.createElement('div'); atribuicao.className = 'caso-atribuicao'; atribuicao.hidden = true;
+      atribuicao.id = 'atribuicao-' + c.id;
+      const abrir = acao('Encaminhar para estagiário', () => {
+        atribuicao.hidden = !atribuicao.hidden;
+        abrir.setAttribute('aria-expanded', String(!atribuicao.hidden));
+      });
+      abrir.setAttribute('aria-expanded', 'false'); abrir.setAttribute('aria-controls', atribuicao.id);
+      actions.append(abrir);
+      const select = document.createElement('select'); select.setAttribute('aria-label', 'Estagiário responsável');
+      const vazio = document.createElement('option'); vazio.value = ''; vazio.textContent = 'Selecione um estagiário'; select.append(vazio);
+      const atribuir = acao('Salvar responsável', () => {
+        if (!estagiarios.some(e => e.uid === select.value)) {
+          retorno.textContent = 'Selecione um estagiário antes de encaminhar o caso.'; return;
+        }
+        return salvarCaso({ estagiarioUid: select.value, liberadoParaEstagiario: true, status: 'com-estagiario' }, 'Caso encaminhado. O estagiário já pode acessar os documentos.');
+      });
       if (estagiarios.length) {
-        const select = document.createElement('select'); select.setAttribute('aria-label', 'Estagiário responsável');
         for (const e of estagiarios) {
           const opt = document.createElement('option'); opt.value = e.uid; opt.textContent = e.nome || e.email;
           opt.selected = e.uid === c.estagiarioUid; select.append(opt);
         }
-        actions.append(select, botao('Atribuir', async () => {
-          await updateDoc(doc(db, 'casos', c.id), {
-            estagiarioUid: select.value, liberadoParaEstagiario: true, status: 'com-estagiario'
-          });
-          await carregarCasos();
-        }));
+        select.value = c.estagiarioUid || '';
+        atribuicao.append(select, atribuir);
+      } else {
+        const ajuda = document.createElement('p'); ajuda.textContent = 'Nenhum estagiário cadastrado. Você pode aceitar o caso agora e encaminhá-lo depois.';
+        const link = document.createElement('a'); link.href = '#equipe'; link.textContent = 'Adicionar estagiário na equipe';
+        atribuicao.append(ajuda, link);
       }
-      if (c.liberadoParaEstagiario) {
-        actions.append(botao('Revogar acesso da equipe', async () => {
-          await updateDoc(doc(db, 'casos', c.id), { liberadoParaEstagiario: false, estagiarioUid: null, status: 'aceito' });
-          await carregarCasos();
-        }));
+      const revogar = acao('Revogar acesso da equipe', () => salvarCaso({ liberadoParaEstagiario: false, estagiarioUid: null, status: 'aceito' }, 'Acesso da equipe revogado. O caso continua aceito.'));
+      actions.append(revogar);
+      function sincronizar() {
+        aceitar.disabled = salvando || ['aceito', 'com-estagiario'].includes(c.status);
+        recusar.disabled = salvando || c.status === 'recusado';
+        atribuir.disabled = salvando; select.disabled = salvando;
+        abrir.disabled = salvando; revogar.disabled = salvando;
+        revogar.hidden = !c.liberadoParaEstagiario;
+        const pessoa = equipe.find(e => e.uid === c.estagiarioUid);
+        responsavel.textContent = c.liberadoParaEstagiario
+          ? 'Responsável: ' + (pessoa?.nome || pessoa?.email || 'Estagiário atribuído') : 'Estagiário: ainda não atribuído.';
       }
-      card.append(actions);
+      sincronizar();
+      card.append(responsavel, actions, atribuicao, retorno);
     }
     lista.append(card);
   }

@@ -40,6 +40,10 @@ onAuthStateChanged(auth, async (usuario) => {
     if (destino) {
       link.href = destino;
       link.hidden = false;
+      if (sessionStorage.getItem('apos-login') === 'agendar.html') {
+        sessionStorage.removeItem('apos-login');
+        location.replace(snap.data()?.role === 'cliente' ? 'agendar.html' : destino);
+      }
     }
   } catch (erro) {
     console.error('Não foi possível carregar o perfil.', erro);

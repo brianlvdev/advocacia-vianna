@@ -1,8 +1,7 @@
-import { exigirPapel } from './guard.js';
-import { functions } from './backend.js';
+import { supabase } from './supabase-config.js';
+import { functions, signInWithPopup } from './backend.js';
 import { httpsCallable } from './backend.js';
 
-await exigirPapel(['cliente']);
 const aviso = document.getElementById('aviso');
 const area = document.getElementById('horarios');
 const consultar = httpsCallable(functions, 'listarHorarios');
@@ -22,7 +21,7 @@ async function carregarHorarios() {
     area.replaceChildren();
     let diaAtual = '';
     let linha = null;
-    for (const inicioMs of horarios) {
+    for (const inicioMs of [...new Set(horarios)].filter(Number.isSafeInteger).sort((a,b) => a-b)) {
       if (!Number.isSafeInteger(inicioMs)) continue;
       const data = new Date(inicioMs);
       const dia = data.toLocaleDateString('pt-BR', opcoesData);
@@ -30,14 +29,16 @@ async function carregarHorarios() {
         diaAtual = dia;
         const titulo = document.createElement('h3');
         titulo.textContent = dia;
+        const grupo = document.createElement('section'); grupo.className = 'agenda-dia';
         linha = document.createElement('div');
-        linha.className = 'linha horarios-linha';
-        area.append(titulo, linha);
+        linha.className = 'agenda-lista';
+        grupo.append(titulo, linha); area.append(grupo);
       }
       const botao = document.createElement('button');
       botao.className = 'btn btn-horario';
       botao.type = 'button';
       botao.textContent = data.toLocaleTimeString('pt-BR', opcoesHora);
+      botao.setAttribute('aria-label', 'Agendar ' + dia + ' às ' + botao.textContent);
       botao.addEventListener('click', async () => {
         if (enviando) return;
         const dataCompleta = data.toLocaleString('pt-BR', {
@@ -77,4 +78,36 @@ async function carregarHorarios() {
     area.append(atualizar);
   }
 }
-await carregarHorarios();
+async function iniciar() {
+  try {
+    const { data: sessao, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!sessao.session) {
+      const texto = document.createElement('p'); texto.textContent = 'Entre com Google para consultar os horários e solicitar seu atendimento.';
+      const entrar = document.createElement('button'); entrar.type = 'button'; entrar.className = 'btn'; entrar.textContent = 'Entrar para agendar';
+      entrar.addEventListener('click', async () => {
+        entrar.disabled = true;
+        try {
+          sessionStorage.setItem('apos-login', 'agendar.html');
+          await signInWithPopup();
+        } catch (erro) {
+          console.error(erro); aviso.textContent = 'Não foi possível iniciar o login. Tente novamente.';
+        } finally { entrar.disabled = false; }
+      });
+      area.replaceChildren(texto, entrar); return;
+    }
+    const { data, error: erroUsuario } = await supabase.auth.getUser();
+    if (erroUsuario || !data.user) throw erroUsuario || new Error('Sessão inválida');
+    const { data: perfil, error: erroPerfil } = await supabase.from('perfis').select('papel').eq('id', data.user.id).single();
+    if (erroPerfil) throw erroPerfil;
+    if (perfil?.papel !== 'cliente') {
+      area.textContent = 'O agendamento nesta página é destinado aos clientes. Acesse seu painel para gerenciar os atendimentos.';
+      document.getElementById('minha-area').href = perfil?.papel === 'admin' ? 'advogado.html' : 'estagiario.html';
+      return;
+    }
+    await carregarHorarios();
+  } catch (erro) {
+    console.error(erro); aviso.textContent = 'Não foi possível carregar sua conta. Atualize a página para tentar novamente.';
+  }
+}
+await iniciar();

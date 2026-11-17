@@ -55,8 +55,9 @@ export async function updateDoc(ref,data) {
     if(data.arquivos.length)check(await supabase.from('documentos').insert(data.arquivos.map(a=>({...a,caso_id:ref.id}))));
     check(await supabase.rpc('finalizar_caso',{p_caso:ref.id}));return;
   }
-  const rows=check(await supabase.from(ref.table).update(pack(data)).eq('id',ref.id).select('id'));
+  const rows=check(await supabase.from(ref.table).update(pack(data)).eq('id',ref.id).select('*'));
   if(!rows.length)throw new Error('Registro indisponível ou acesso negado.');
+  return unpack(rows[0],ref.table);
 }
 export async function deleteDoc(ref) {const rows=check(await supabase.from(ref.table).delete().eq('id',ref.id).select('id'));if(!rows.length)throw new Error('Acesso negado.');}
 export const ref=(_,path)=>({path,bucket:path.startsWith('site/')?'institucional':'documentos'});
