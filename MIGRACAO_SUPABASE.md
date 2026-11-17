@@ -36,7 +36,7 @@ O provedor está ativado; login validado pelo usuário.
 Callback autorizado no Google:
 https://tqhannrxpdubfmhcclyo.supabase.co/auth/v1/callback
 
-Configurar URL Configuration no Supabase para a origem da prévia local (por exemplo http://localhost:5500/index.html) e, só após aprovação, para o domínio publicado.
+Manter URL Configuration no Supabase para a origem da prévia local (por exemplo http://localhost:5500/index.html) e os domínios publicados. Para o novo endereço: Site URL https://advocacia-vianna.web.app; Redirect URLs https://advocacia-vianna.web.app/index.html e https://advocacia-vianna.web.app/. Preservar as URLs anteriores.
 Não enviar segredo OAuth pelo chat nem adicioná-lo ao repositório.
 As URLs assinadas já emitidas podem continuar válidas por até 60 segundos após revogar a atribuição; a geração de novos links é bloqueada imediatamente.
 
@@ -47,5 +47,16 @@ supabase/tests.sql é uma suíte transacional para banco vazio/isolado, não par
 
 ## Limites desta etapa
 - O código Firebase antigo permanece versionado para referência, mas não é importado pelos módulos ativos. Não executar deploy de Cloud Functions ou regras Firebase para esta migração.
-- Envio da branch codex/migracao-supabase autorizado pelo usuário para revisão. Sem merge na main e sem publicação do site.
+- Migração integrada à main no PR #4 e publicada após autorização do usuário. Login Google em produção confirmado pelo usuário.
 - Abrir a pasta desta branch no Live Server. Uma outra cópia local (por exemplo D:\ADVianna) não recebe as alterações automaticamente: é necessário buscar e selecionar a branch nela, preservando alterações locais.
+
+## Ajustes de casos, agenda e endereços — 17/11/2026
+- Diagnóstico: a alteração de status estava persistindo no banco; faltava confirmação junto do caso e a lista era recriada a cada ação. O cartão agora usa a linha retornada pelo Supabase, exibe sucesso/erro e desabilita a ação correspondente ao estado atual, sem recarregar.
+- Encaminhamento sempre visível, com escolha explícita do responsável e instruções quando não há estagiários. Recusar remove a atribuição e revoga o acesso.
+- Botão de agendamento no início; visitante passa pelo Google e retorna à agenda usando o callback já configurado em index.html.
+- Horários ordenados no fuso de Brasília, em listas por dia, duas colunas no computador e uma no celular.
+- Logo PNG existente usada como favicon em todas as páginas. Nenhum pixel da logo foi alterado.
+- Firebase Hosting com cleanUrls e redirecionamento de index.html para /. Domínio gratuito advocacia-vianna.web.app criado no mesmo projeto; endereço antigo mantido.
+- tests/panels.cjs ampliado para aceitar/recusar/atribuir, falha de escrita, equipe vazia, agenda, conflito e retorno do login.
+- supabase/tests-casos.sql passou no projeto real: registros fictícios em transação com ROLLBACK, sem modificar casos reais nem políticas.
+- tests/navigation.cjs protege o fragmento OAuth e verifica navegação entre seções sem hash. Sem automação de navegador nesta rodada.

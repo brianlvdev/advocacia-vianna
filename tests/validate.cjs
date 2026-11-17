@@ -36,6 +36,15 @@ try {
   }
   const firebase = JSON.parse(readFileSync(join(raiz, 'firebase.json'), 'utf8'));
   assert(firebase.firestore.rules && firebase.storage.rules && firebase.functions);
+  for (const hosting of firebase.hosting) {
+    assert.equal(hosting.cleanUrls, true);
+    assert.equal(hosting.trailingSlash, false);
+    assert(hosting.redirects.some(r => r.source === '/index.html' && r.destination === '/'));
+  }
+  for (const pagina of readdirSync(join(raiz, 'public')).filter(f => f.endsWith('.html'))) {
+    const html = readFileSync(join(raiz, 'public', pagina), 'utf8');
+    assert(/rel="icon"[^>]*href="\/?img\/logo\.png"/.test(html), pagina + ': favicon ausente');
+  }
   const indices = JSON.parse(readFileSync(join(raiz, 'firestore.indexes.json'), 'utf8'));
   assert(Array.isArray(indices.indexes));
   console.log('Verificação estática: OK (' + js.length + ' módulos JS, 5 páginas).');

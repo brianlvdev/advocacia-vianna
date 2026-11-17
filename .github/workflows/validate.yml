@@ -4,6 +4,7 @@ on:
     branches:
       - feat/modernizacao-seguranca-20261116
       - codex/migracao-supabase
+      - codex/casos-agenda
   pull_request:
     branches:
       - main
@@ -22,6 +23,8 @@ jobs:
         run: node --experimental-vm-modules tests/modules.cjs
       - name: Verificar acoes e persistencia dos paineis
         run: node --experimental-vm-modules tests/panels.cjs
+      - name: Verificar navegacao e fragmentos OAuth
+        run: node tests/navigation.cjs
       - name: Instalar dependencias das funcoes
         working-directory: functions
         run: npm install --no-audit --no-fund
