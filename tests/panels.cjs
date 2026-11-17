@@ -52,6 +52,7 @@ async function scenario(role,page){
   storage:{from:bucket=>({upload:async(file)=>{writes.push({bucket,file});return {data:{},error:null};},getPublicUrl:()=>({data:{publicUrl:'https://example.invalid/foto.png'}}),createSignedUrl:async()=>({data:{signedUrl:'https://example.invalid/documento'},error:null})})}
  };
  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id);};
+ node('lista-areas').append(new Element('article')); // conteúdo estático inicial
  const days=[1,2,3,4,5].map(value=>Object.assign(new Element('input'),{value:String(value),checked:value===1}));
  const document={getElementById:node,createElement:tag=>new Element(tag),querySelectorAll:selector=>selector.includes(':checked')?days.filter(d=>d.checked):days};
  const errors=[],alerts=[],redirects=[];const location={replace:url=>redirects.push(url),reload(){}};
@@ -73,6 +74,12 @@ async function scenario(role,page){
  await admin.node('form-perfil').fire('submit');
  assert.equal(admin.rows.perfil_publico[0].dados.areas[0].titulo,'Nova área');
  assert.equal(admin.rows.perfil_publico[0].dados.endereco,'Endereço preservado');
+ await area.children[2].fire('click');
+ await admin.node('add-stat').fire('click');
+ const info=admin.node('lista-stats').children[0];info.children[0].value='Atendimento';info.children[1].value='Agendado';
+ await admin.node('form-perfil').fire('submit');
+ assert.equal(admin.rows.perfil_publico[0].dados.areas.length,0);
+ assert.equal(admin.rows.perfil_publico[0].dados.estatisticas[0].valor,'Agendado');
  admin.node('disp-inicio').value='10:00';await admin.node('form-disp').fire('submit');
  assert.equal(admin.rows.disponibilidade[0].inicio,'10:00');
  admin.node('tarefa-titulo').value='Nova tarefa';admin.node('tarefa-data').value='2026-11-20';admin.node('tarefa-estagiario').value='estagiario';
@@ -93,4 +100,9 @@ async function scenario(role,page){
  await assert.rejects(()=>scenario('cliente','advogado'),/permissão/);
  await assert.rejects(()=>scenario('estagiario','advogado'),/permissão/);
  console.log('PASS: guard bloqueia cliente e estagiário no painel do advogado');
+ const site=await scenario('cliente','perfil-publico');
+ assert.equal(site.node('lista-areas').children.length,0);
+ assert.equal(site.node('numeros').hidden,true);
+ assert.equal(site.errors.length,0,JSON.stringify(site.errors));
+ console.log('PASS: remover áreas e salvar lista vazia atualiza a página pública');
 })().catch(e=>{console.error(e);process.exitCode=1;});
