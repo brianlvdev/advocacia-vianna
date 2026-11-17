@@ -1,5 +1,5 @@
-import { db } from './firebase-config.js';
-import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { db } from './backend.js';
+import { doc, getDoc } from './backend.js';
 function externo(id, destino) {
   try {
     const url = new URL(destino);
@@ -47,7 +47,7 @@ try {
       externo('link-instagram', 'https://www.instagram.com/' + d.instagram + '/');
     if (d.linkedinUrl) externo('link-linkedin', d.linkedinUrl);
     if (d.jusbrasilUrl) externo('link-jusbrasil', d.jusbrasilUrl);
-    if (Array.isArray(d.areas) && d.areas.length) {
+    if (Array.isArray(d.areas)) {
       const lista = document.getElementById('lista-areas');
       lista.replaceChildren();
       d.areas.filter(a => a && a.titulo).slice(0,12).forEach((a,i) => {
@@ -59,15 +59,16 @@ try {
         card.append(num,h,p); lista.append(card);
       });
     }
-    if (Array.isArray(d.estatisticas) && d.estatisticas.length) {
+    if (Array.isArray(d.estatisticas)) {
       const lista = document.getElementById('lista-stats');
+      lista.replaceChildren();
       d.estatisticas.filter(s => s && s.rotulo && s.valor).slice(0,8).forEach(s => {
         const card = document.createElement('article'); card.className = 'card';
         const h = document.createElement('h3'); h.textContent = s.valor;
         const p = document.createElement('p'); p.textContent = s.rotulo;
         card.append(h,p); lista.append(card);
       });
-      if (lista.hasChildNodes()) document.getElementById('numeros').hidden = false;
+      document.getElementById('numeros').hidden = !lista.hasChildNodes() && !d.jusbrasilUrl;
     }
   }
 } catch (erro) { console.error('Não foi possível carregar os dados institucionais:', erro); }

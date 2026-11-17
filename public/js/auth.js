@@ -1,10 +1,10 @@
-import { auth, db } from './firebase-config.js';
+import { auth, db } from './backend.js';
 import {
   GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+} from './backend.js';
 import {
   doc, getDoc, setDoc, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+} from './backend.js';
 
 const botao = document.getElementById('btn-login');
 const link = document.getElementById('link-painel');
@@ -31,16 +31,8 @@ onAuthStateChanged(auth, async (usuario) => {
   botao.textContent = 'Sair (' + (usuario.displayName || 'Minha conta').split(' ')[0] + ')';
   try {
     const ref = doc(db, 'users', usuario.uid);
-    let snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        nome: usuario.displayName || 'Cliente',
-        email: usuario.email,
-        role: 'cliente',
-        criadoEm: serverTimestamp()
-      });
-      snap = await getDoc(ref);
-    }
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('Perfil ainda indisponível. Entre novamente.');
     const paginas = {
       admin: 'advogado.html', estagiario: 'estagiario.html', cliente: 'cliente.html'
     };

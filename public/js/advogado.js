@@ -1,12 +1,12 @@
 import { exigirPapel } from './guard.js';
-import { auth, db, storage, functions } from './firebase-config.js';
-import { signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { auth, db, storage, functions } from './backend.js';
+import { signOut } from './backend.js';
 import {
   doc, collection, getDocs, updateDoc, getDoc, setDoc, addDoc, deleteDoc,
   query, where, serverTimestamp
-} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js';
-import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+} from './backend.js';
+import { ref, uploadBytes, getDownloadURL, abrirDocumento } from './backend.js';
+import { httpsCallable } from './backend.js';
 
 const { usuario } = await exigirPapel(['admin']);
 const status = document.getElementById('aviso');
@@ -135,6 +135,7 @@ document.getElementById('form-perfil').addEventListener('submit', async e => {
       const destino = ref(storage, 'site/foto-perfil');
       await uploadBytes(destino, foto, { contentType: foto.type });
       novo.fotoUrl = await getDownloadURL(destino);
+      novo.fotoUrl += '?v=' + Date.now();
     }
     await setDoc(perfilRef, novo, { merge: true });
     mensagem('Informações institucionais salvas.');
@@ -182,8 +183,7 @@ async function carregarCasos() {
     card.append(h, situacao, p);
     for (const a of c.arquivos || []) {
       const b = botao('Abrir: ' + a.nome, async () => {
-        const url = await getDownloadURL(ref(storage, a.caminho));
-        window.open(url, '_blank', 'noopener');
+        await abrirDocumento(ref(storage, a.caminho));
       });
       card.append(b);
     }

@@ -1,6 +1,6 @@
 import { exigirPapel } from './guard.js';
-import { functions } from './firebase-config.js';
-import { httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js';
+import { functions } from './backend.js';
+import { httpsCallable } from './backend.js';
 
 await exigirPapel(['cliente']);
 const aviso = document.getElementById('aviso');
